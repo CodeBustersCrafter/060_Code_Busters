@@ -1,17 +1,29 @@
+import os
 from openai import AsyncOpenAI
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import FAISS
 from langchain_huggingface import HuggingFaceEmbeddings
+from dotenv import load_dotenv
+
+load_dotenv()
 
 def initialize_client():
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        raise ValueError("OPENAI_API_KEY is not set in the environment variables.")
     return AsyncOpenAI(
         base_url="https://integrate.api.nvidia.com/v1",
-        api_key="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"
+        api_key=api_key
     )
 
 def create_vector_db():
     try:
-        with open("text_file_db.txt", "r", encoding="utf-8") as file:
+        # Get the directory where the script is located
+        script_dir = os.path.dirname(os.path.realpath(__file__))
+        # Construct the full path to 'text_file_db.txt'
+        file_path = os.path.join(script_dir, "text_file_db.txt")
+        
+        with open(file_path, "r", encoding="utf-8") as file:
             text = file.read()
         print("File read successfully")
     except UnicodeDecodeError as e:
@@ -57,5 +69,5 @@ if __name__ == "__main__":
         prompt = "What are the main political parties mentioned in the text?"
         response = await generate_response(prompt, client, vector_store)
         print(response)
-
+    
     asyncio.run(main())
