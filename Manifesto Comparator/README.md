@@ -1,4 +1,4 @@
-```markdown
+
 # Election RAG Assistant
 
 ![Project Logo](https://via.placeholder.com/150)
