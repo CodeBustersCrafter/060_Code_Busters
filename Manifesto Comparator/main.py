@@ -10,8 +10,16 @@ def initialize_client():
     )
 
 def create_vector_db():
-    with open("text_file_db.txt", "r", encoding="utf-8") as file:
-        text = file.read()
+    try:
+        with open("text_file_db.txt", "r", encoding="utf-8") as file:
+            text = file.read()
+        print("File read successfully")
+    except UnicodeDecodeError as e:
+        print(f"UnicodeDecodeError: {e}")
+        return None
+    except Exception as e:
+        print(f"Error reading file: {e}")
+        return None
     
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
     chunks = text_splitter.split_text(text)
@@ -43,6 +51,9 @@ if __name__ == "__main__":
     async def main():
         client = initialize_client()
         vector_store = create_vector_db()
+        if vector_store is None:
+            print("Failed to create vector store.")
+            return
         prompt = "What are the main political parties mentioned in the text?"
         response = await generate_response(prompt, client, vector_store)
         print(response)
