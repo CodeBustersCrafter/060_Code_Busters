@@ -16,6 +16,8 @@ async def root():
 
 @app.post("/generate")
 async def generate(query: Query):
+    if vector_store is None:
+        return {"error": "Vector store is not initialized."}
     response = await generate_response(query.prompt, client, vector_store)
     return {"response": response}
 
