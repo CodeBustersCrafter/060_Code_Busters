@@ -78,7 +78,7 @@ cd Election_RAG
 #### a. Navigate to the Backend Directory
 
 ```bash
-cd "Manifesto Comparator"
+cd "Manifesto Comparator/backend"
 ```
 
 #### b. Create a Virtual Environment
