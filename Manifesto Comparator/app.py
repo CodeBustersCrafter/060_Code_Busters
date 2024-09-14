@@ -1,10 +1,11 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
-from main import initialize_client, generate_response
+from main import initialize_client, generate_response, create_vector_db
 
 app = FastAPI()
 
 client = initialize_client()
+vector_store = create_vector_db()
 
 class Query(BaseModel):
     prompt: str
@@ -15,5 +16,9 @@ async def root():
 
 @app.post("/generate")
 async def generate(query: Query):
-    response = await generate_response(query.prompt, client)
+    response = await generate_response(query.prompt, client, vector_store)
     return {"response": response}
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
