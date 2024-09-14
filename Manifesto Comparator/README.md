@@ -49,21 +49,7 @@ Before you begin, ensure you have met the following requirements:
 
 ---
 
-## 📁 Project Structure
 
-```
-Election_RAG/
-├── Manifesto Comparator/
-│   ├── app.py
-│   ├── main.py
-│   ├── text_file_db.txt
-│   ├── requirements.txt
-│   └── .env  # (Optional, for backend environment variables)
-└── Streamlit Frontend/
-    ├── streamlit_app.py
-    ├── requirements.txt
-    └── .env  # (For frontend environment variables)
-```
 
 - **Manifesto Comparator/**: Contains the FastAPI backend, including application logic and necessary text data.
 - **Streamlit Frontend/**: Houses the Streamlit application for the user interface.
