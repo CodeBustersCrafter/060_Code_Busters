@@ -86,10 +86,18 @@ def election_chatbot():
             st.markdown(f"**You:** {msg['text']}")
         else:
             st.markdown(f"**Chat Bot:** {msg['text']}")
+#Global predicted data
+data = None
 def win_predictor():
+    global data
     st.header("📈 Win Predictor")
-    data = fetch_win_predictor_data()
-    data = data.split("```")[1]
+    if(data==None):
+       data = fetch_win_predictor_data()
+    temp = data.split("```")
+    description = temp[0]
+    data = temp[1]
+    description = description.replace("`","")
+    st.write(description)
     if data:
         import json
         
@@ -132,34 +140,107 @@ def win_predictor():
                 st.bar_chart(df)
             elif value['type'] == "map":
                 st.subheader(key)
+                import pydeck as pdk
+
+                # Sample Data
                 df = pd.DataFrame(value["data"])
-                
-                # Create a choropleth map for Sri Lanka
-                import plotly.express as px
-                
-                # Load Sri Lanka geojson file (you'll need to provide this)
-                with open('sri_lanka_provinces.geojson') as f:
-                    sri_lanka_geojson = json.load(f)
-                
-                # Melt the dataframe to long format
-                df_melted = df.melt(id_vars=['province'], var_name='candidate', value_name='votes')
-                
-                # Create the choropleth map
-                fig = px.choropleth(
-                    df_melted,
-                    geojson=sri_lanka_geojson,
-                    locations='province',
-                    color='votes',
-                    color_continuous_scale="Viridis",
-                    featureidkey="properties.province_name",
-                    animation_frame='candidate',
-                    labels={'votes':'Voting Intention (%)'}
-                )
-                
-                fig.update_geos(fitbounds="locations", visible=False)
-                fig.update_layout(height=600, margin={"r":0,"t":0,"l":0,"b":0})
-                
-                st.plotly_chart(fig, use_container_width=True)
+
+                from urllib.error import URLError
+
+                @st.cache_data
+                def load_province_data():
+                    # Hardcoded province data for Sri Lanka
+                    provinces = [
+                        {"name": "Western", "latitude": 6.9271, "longitude": 79.8612},
+                        {"name": "Central", "latitude": 7.2906, "longitude": 80.6337},
+                        {"name": "Southern", "latitude": 6.0535, "longitude": 80.2210},
+                        {"name": "Northern", "latitude": 9.0765, "longitude": 80.2586},
+                        {"name": "Eastern", "latitude": 7.7941, "longitude": 81.5790},
+                        {"name": "North Western", "latitude": 7.7573, "longitude": 80.1887},
+                        {"name": "North Central", "latitude": 8.3114, "longitude": 80.4037},
+                        {"name": "Uva", "latitude": 6.8791, "longitude": 81.3359},
+                        {"name": "Sabaragamuwa", "latitude": 6.7056, "longitude": 80.3847}
+                    ]
+                    return pd.DataFrame(provinces)
+
+                try:
+                    # Load the province data
+                    province_data = load_province_data()
+
+                    # Merge the province data with the input DataFrame
+                    # Convert the index of df to string to match the 'name' column in province_data
+                    df.index = df.index.astype(str)
+
+                    # Use pd.merge to merge province_data and df on 'name'
+                    merged_data = pd.merge(province_data, df, left_on='name', right_on='Province', how='left')
+
+                    # Create a ColumnLayer for AKD support
+                    akd_layer = pdk.Layer(
+                        "ColumnLayer",
+                        data=merged_data,
+                        get_position=["longitude", "latitude"],
+                        get_position_offset=[-0.0001, -0.0001],
+                        get_elevation="AKD",
+                        elevation_scale=1000,  # Adjust to make the bars visible
+                        radius=10000,
+                        get_fill_color=[255, 0, 0, 160],  # Red color for AKD
+                        pickable=True,
+                        auto_highlight=True
+                    )
+
+                    # Create a ColumnLayer for Ranil Wickremesinghe support
+                    ranil_layer = pdk.Layer(
+                        "ColumnLayer",
+                        data=merged_data,
+                        get_position=["longitude", "latitude"],
+                        get_position_offset=[0.0001, 0.0001],
+                        get_elevation="Ranil Wickremesinghe",
+                        elevation_scale=1000,
+                        radius=6000,
+                        get_fill_color=[0, 0, 255, 160],  # Blue color for Ranil Wickremesinghe
+                        pickable=True,
+                        auto_highlight=True
+                    )
+
+                    # Create a ColumnLayer for Sajith Premadasa support
+                    sajith_layer = pdk.Layer(
+                        "ColumnLayer",
+                        data=merged_data,
+                        get_position=["longitude", "latitude"],
+                        get_elevation="Sajith Premadasa",
+                        elevation_scale=1000,
+                        radius=3000,
+                        get_fill_color=[0, 255, 0, 160],  # Green color for Sajith Premadasa
+                        pickable=True,
+                        auto_highlight=True
+                    )
+
+                    # Combine the layers
+                    layers = [akd_layer, ranil_layer, sajith_layer]
+
+                    # Render the map with the 3D columns
+                    st.pydeck_chart(
+                        pdk.Deck(
+                            map_style="mapbox://styles/mapbox/light-v9",
+                            initial_view_state={
+                                "latitude": 7.8731,
+                                "longitude": 80.7718,
+                                "zoom": 7,
+                                "pitch": 50
+                            },
+                            layers=layers,
+                            tooltip={
+                                "html": "<b>{Province}</b><br/>AKD: {AKD}<br/>Ranil Wickremesinghe: {Ranil Wickremesinghe}<br/>Sajith Premadasa: {Sajith Premadasa}",
+                                "style": {"backgroundColor": "steelblue", "color": "white"}
+                            }
+                        )
+                    )
+
+                except URLError as e:
+                    st.error(f"Data load error: {e}")
+                except Exception as e:
+                    st.error(f"An error occurred: {e}")
+
             else:
                 st.write(value)
     else:

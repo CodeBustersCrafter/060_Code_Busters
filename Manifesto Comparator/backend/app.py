@@ -79,8 +79,6 @@ async def compare(query: ComparisonQuery):
         return {"error": "Failed to generate comparison."}
 
 from win_predictor import extract_data_from_urls, analyze_content
-# Global variable to store win predictor results
-win_predictor_results = None
 
 @app.get("/win_predictor")
 async def win_predictor():

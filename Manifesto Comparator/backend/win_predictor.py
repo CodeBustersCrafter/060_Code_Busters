@@ -45,7 +45,7 @@ async def analyze_content(content, client):
     prompt = f"""Analyze the following content and provide a detailed description of the election predictions and trends:\n\n{content}. 
     In addition of that arrange the data in order to plot some graphs. Your response should be in json format but it should follow streamlit lib syntax for each
     graph each element in the response json should be a key value pair (graph_name,list of data and the type of the graph). Please do not include the description in the response and just give me a
-    string which can be directly covert in to a json object in python. Do not add additional symbols to it. Minimum count of graphs = 5, maximum count of graphs = 10, make sure to give suitable meanningful graph name
+    string which can be directly covert in to a json object in python. Do not add additional symbols to it. Minimum count of graphs = 3, maximum count of graphs = 3, make sure to give suitable meanningful graph name
     """
     
     completion = await client.chat.completions.create(
