@@ -78,6 +78,27 @@ async def compare(query: ComparisonQuery):
         logger.error(f"Error generating comparison: {e}")
         return {"error": "Failed to generate comparison."}
 
+from win_predictor import extract_data_from_urls, analyze_content
+# Global variable to store win predictor results
+win_predictor_results = None
+
+@app.get("/win_predictor")
+async def win_predictor():
+    logger.info("Win predictor endpoint accessed.")
+    try:
+        urls = [
+            "https://numbers.lk/analysis/akd-maintains-lead-in-numbers-lk-s-2nd-pre-election-poll-ranil-surges-to-second-place",
+            "https://www.ihp.lk/press-releases/ak-dissanayake-and-sajith-premadasa-led-august-voting-intent-amongst-all-adults"
+        ]
+        extracted_content = extract_data_from_urls(urls)
+        analysis = await analyze_content(extracted_content, client)
+        logger.info(f"Generated win predictor analysis: {analysis}")
+        return {"data": analysis}
+    except Exception as e:
+        logger.error(f"Error in win predictor: {e}")
+        return {"error": "Failed to generate win predictor analysis."}
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
