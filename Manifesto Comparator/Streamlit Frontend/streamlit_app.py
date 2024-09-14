@@ -3,16 +3,16 @@ import requests
 import json
 import os
 from dotenv import load_dotenv
-import matplotlib.pyplot as plt
 import pandas as pd
+import time
 
 # Load environment variables from .env file
 load_dotenv()
 
 # Constants for different API endpoints
-MANIFESTO_API_URL = os.getenv("FASTAPI_URL", "http://127.0.0.1:8000/generate")
+MANIFESTO_API_URL = os.getenv("COMPARATOR_URL", "http://127.0.0.1:8000/compare")
 WIN_PREDICTOR_API_URL = os.getenv("WIN_PREDICTOR_URL", "http://127.0.0.1:8000/win_predictor")
-CHATBOT_API_URL = os.getenv("CHATBOT_URL", "http://127.0.0.1:8000/chatbot")
+CHATBOT_API_URL = os.getenv("FASTAPI_URL", "http://127.0.0.1:8000/generate")
 
 def generate_manifesto_response(prompt):
     headers = {
@@ -22,7 +22,7 @@ def generate_manifesto_response(prompt):
         "prompt": prompt
     }
     try:
-        response = requests.post(MANIFESTO_API_URL, headers=headers, data=json.dumps(payload))
+        response = requests.post(CHATBOT_API_URL, headers=headers, data=json.dumps(payload))
         if response.status_code == 200:
             return response.json().get("response", "No response found.")
         else:
@@ -42,34 +42,50 @@ def fetch_win_predictor_data():
         st.error(f"An error occurred: {e}")
         return {}
 
-def generate_chatbot_response(message):
+def compare_manifestos(candidate1, candidate2):
     headers = {
         "Content-Type": "application/json"
     }
     payload = {
-        "message": message
+        "candidate1": candidate1,
+        "candidate2": candidate2
     }
     try:
-        response = requests.post(CHATBOT_API_URL, headers=headers, data=json.dumps(payload))
+        response = requests.post(MANIFESTO_API_URL, headers=headers, data=json.dumps(payload))
         if response.status_code == 200:
-            return response.json().get("response", "No response found.")
+            return response.json().get("comparison", "No comparison found.")
         else:
             return f"Error {response.status_code}: {response.text}"
     except requests.exceptions.RequestException as e:
         return f"An error occurred: {e}"
 
-def manifesto_comparator():
-    st.header("📄 Manifesto Comparator")
-    prompt = st.text_area("🔍 Enter your prompt related to the manifesto:", height=150)
+def election_chatbot():
+    st.header("🤖 Election Chat Bot")
+    if 'messages' not in st.session_state:
+        st.session_state['messages'] = []
 
-    if st.button("💡 Generate Response"):
-        if prompt.strip() == "":
-            st.warning("Please enter a valid prompt.")
-        else:
+    def send_message():
+        user_input = st.session_state["user_input"]
+        if user_input:
+            st.session_state.messages.append({"type": "user", "text": user_input})
             with st.spinner("Generating response..."):
-                response = generate_manifesto_response(prompt)
-                st.success("**Response:**")
-                st.write(response)
+                progress_placeholder = st.empty()
+                progress_bar = progress_placeholder.progress(0)
+                for i in range(100):
+                    time.sleep(0.01)
+                    progress_bar.progress(i + 1)
+                response = generate_manifesto_response(user_input)
+                progress_placeholder.empty()
+            st.session_state.messages.append({"type": "bot", "text": response})
+            st.session_state["user_input"] = ""
+
+    st.text_input("You:", key="user_input", on_change=send_message)
+
+    for msg in st.session_state.messages:
+        if msg["type"] == "user":
+            st.markdown(f"**You:** {msg['text']}")
+        else:
+            st.markdown(f"**Chat Bot:** {msg['text']}")
 
 def win_predictor():
     st.header("📈 Win Predictor")
@@ -85,26 +101,41 @@ def win_predictor():
     else:
         st.info("No data available to display.")
 
-def election_chatbot():
-    st.header("🤖 Election Chat Bot")
-    if 'messages' not in st.session_state:
-        st.session_state['messages'] = []
+def manifesto_comparator():
+    st.header("📄 Election Manifesto Comparator")
+    
+    candidates = [
+        "Ranil Wickremesinghe",
+        "Sajith Premadasa",
+        "Anura Kumara Dissanayake",
+        "Namal Rajapaksa",
+        "Dilith Jayaweera"
+    ]
 
-    def send_message():
-        user_input = st.session_state["user_input"]
-        if user_input:
-            st.session_state.messages.append({"type": "user", "text": user_input})
-            response = generate_chatbot_response(user_input)
-            st.session_state.messages.append({"type": "bot", "text": response})
-            st.session_state["user_input"] = ""
+    col1, col2 = st.columns(2)
 
-    st.text_input("You:", key="user_input", on_change=send_message)
+    with col1:
+        candidate1 = st.selectbox("Select first candidate:", candidates, key="candidate1")
+        st.write(f"Manifesto for {candidate1}")
 
-    for msg in st.session_state.messages:
-        if msg["type"] == "user":
-            st.markdown(f"**You:** {msg['text']}")
+    with col2:
+        candidate2 = st.selectbox("Select second candidate:", candidates, key="candidate2")
+        st.write(f"Manifesto for {candidate2}")
+
+    if st.button("💡 Compare Manifestos"):
+        if candidate1 == candidate2:
+            st.warning("Please select two different candidates.")
         else:
-            st.markdown(f"**Chat Bot:** {msg['text']}")
+            with st.spinner("Generating comparison..."):
+                progress_placeholder = st.empty()
+                progress_bar = progress_placeholder.progress(0)
+                for i in range(100):
+                    time.sleep(0.01)
+                    progress_bar.progress(i + 1)
+                response = compare_manifestos(candidate1, candidate2)
+                progress_placeholder.empty()
+                st.success("**Comparison:**")
+                st.write(response)
 
 def main():
     st.set_page_config(page_title="Election RAG Assistant", layout="wide")

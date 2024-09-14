@@ -57,6 +57,45 @@ async def generate_response(prompt, client, vector_store):
     )
     return completion.choices[0].message.content
 
+# New function to create vector stores for each candidate
+def create_candidate_vector_stores():
+    try:
+        # Get the directory where the script is located
+        script_dir = os.path.dirname(os.path.realpath(__file__))
+        # Construct the full path to 'text_file_db.txt'
+        file_path = os.path.join(script_dir, "manifest.txt")
+        
+        with open(file_path, "r", encoding="utf-8") as file:
+            text = file.read()
+        print("Manifest File read successfully")
+    except UnicodeDecodeError as e:
+        print(f"UnicodeDecodeError: {e}")
+        return None
+    except Exception as e:
+        print(f"Error reading file: {e}")
+        return None
+    
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
+    chunks = text_splitter.split_text(text)
+    
+    embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
+    vector_store = FAISS.from_texts(chunks, embeddings)
+    return vector_store
+
+# New function to compare two candidates
+async def compare_candidates(candidate1, candidate2, client, candidate_vector_stores):
+    if candidate_vector_stores is None:
+        print("Failed to create candidate_vector_stores.")
+        return
+    prompt = f"""Compare the manifestos of {candidate1} and {candidate2} based on the text. Provide a detailed comparison of their key policies and approaches.
+    give me the response comparing both of them and response should be like a table. At the end of the table merge the both sides add common policies'"""
+    
+    response = await generate_response(prompt, client, candidate_vector_stores)
+    print(response)
+    return response
+    
+    
+
 if __name__ == "__main__":
     import asyncio
     
@@ -69,5 +108,11 @@ if __name__ == "__main__":
         prompt = "What are the main political parties mentioned in the text?"
         response = await generate_response(prompt, client, vector_store)
         print(response)
+        
+        # Example usage of the new comparison function
+        candidate_vector_stores = create_candidate_vector_stores()
+        comparison = await compare_candidates("Sajith", "Ranil", client, candidate_vector_stores)
+        print("\nComparison of Sajith and Ranil's manifestos:")
+        print(comparison)
     
     asyncio.run(main())
