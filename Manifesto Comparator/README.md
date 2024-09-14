@@ -1,7 +1,7 @@
 
 # Election RAG Assistant
 
-![Project Logo](https://via.placeholder.com/150)
+
 
 **Election RAG Assistant** is a comprehensive application that leverages FastAPI for the backend and Streamlit for the frontend to provide insightful AI-generated responses based on election-related text data. Utilizing advanced technologies like LangChain, FAISS, and OpenAI's LLaMA model, this project offers an interactive interface for users to query and analyze election manifestos and related documents.
 
