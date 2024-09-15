@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from main import initialize_client, generate_response, create_vector_db, create_candidate_vector_stores, compare_candidates
+from main import initialize_clients, generate_response, create_vector_db, create_candidate_vector_stores, compare_candidates
 import os
 import logging
 
@@ -28,7 +28,7 @@ app.add_middleware(
 
 # Initialize client and vector stores
 try:
-    client = initialize_client()
+    openai_client,tavily_client,memory = initialize_clients()
     vector_store = create_vector_db()
     candidate_vector_stores = create_candidate_vector_stores()
     if vector_store is None or candidate_vector_stores is None:
@@ -56,7 +56,7 @@ async def generate(query: Query):
         logger.error("Vector store is not initialized.")
         return {"error": "Vector store is not initialized."}
     try:
-        response = await generate_response(query.prompt, client, vector_store, candidate_vector_stores)
+        response = await generate_response(query.prompt, openai_client,tavily_client, vector_store,memory,1)
         logger.info(f"Generated response: {response}")
         return {"response": response}
     except Exception as e:
@@ -72,17 +72,18 @@ async def compare(query: ComparisonQuery):
     try:
         # Use the relevant candidate vector stores for comparison
         relevant_vector_stores = {candidate: candidate_vector_stores[candidate] for candidate in query.candidates if candidate in candidate_vector_stores}
-        comparison = await compare_candidates(query.candidates, client, relevant_vector_stores)
+        comparison = await compare_candidates(query.candidates, openai_client,tavily_client, relevant_vector_stores)
         logger.info(f"Generated comparison: {comparison}")
         return {"comparison": comparison}
     except Exception as e:
         logger.error(f"Error generating comparison: {e}")
         return {"error": "Failed to generate comparison."}
 
-from win_predictor import extract_data_from_urls, analyze_content
+from win_predictor import extract_data_from_urls, analyze_content, initialize_clients_2
 
 @app.get("/win_predictor")
 async def win_predictor():
+    openai_client,tavily_client = initialize_clients_2()
     logger.info("Win predictor endpoint accessed.")
     try:
         urls = [
@@ -90,7 +91,7 @@ async def win_predictor():
             "https://www.ihp.lk/press-releases/ak-dissanayake-and-sajith-premadasa-led-august-voting-intent-amongst-all-adults"
         ]
         extracted_content = extract_data_from_urls(urls)
-        analysis = await analyze_content(extracted_content, client)
+        analysis = await analyze_content(extracted_content, openai_client, tavily_client)
         logger.info(f"Generated win predictor analysis: {analysis}")
         return {"data": analysis}
     except Exception as e:
