@@ -154,13 +154,30 @@ async def compare_candidates(candidates, client, tavily_client, candidate_vector
     async def get_candidate_response(candidate, prompt):
         if candidate not in candidate_vector_stores:
             return f"No data available for {candidate}."
-        context = await retrieve_context(prompt, candidate_vector_stores[candidate], top_k=10)  # Increased top_k for more context
+        
+        sections = [
+            "Economic Policy and Growth Strategies",
+            "Education Reform and Innovation",
+            "Energy and Sustainability",
+            "Healthcare System and Public Health",
+            "National Security and Defense",
+            "Legal Framework and Judicial Reform",
+            "Transportation and Mobility",
+            "Infrastructure Development and Modernization",
+            "Foreign Policy and International Relations"
+        ]
+        
+        context = ""
+        for section in sections:
+            section_context = await retrieve_context(f"{section} {prompt}", candidate_vector_stores[candidate], top_k=10)
+            context += f"\n{section}:\n{section_context}\n"
+
         full_prompt = f"""Context (from {candidate}'s manifesto): {context}
 
 Question: {prompt}
 
 Instructions:
-1. Carefully analyze the provided context from {candidate}'s policy details.
+1. Carefully analyze the provided context for each sections extracted from {candidate}'s manifesto.
 2. Extract and summarize the specific policies and approaches mentioned for each of the requested sections.
 3. If a particular section is not addressed in the context, state "No specific information available" for that section.(If there is a little bit info about it, please use those data)
 4. Provide a concise but comprehensive answer, ensuring no relevant information is omitted.
@@ -171,33 +188,36 @@ Answer:"""
         completion = await client.chat.completions.create(
             model="meta/llama-3.1-405b-instruct",
             messages=[{"role": "user", "content": full_prompt}],
-            temperature=0.2,
+            temperature=0.3,
             top_p=0.95,
-            max_tokens=4096
+            max_tokens=5120
         )
         return completion.choices[0].message.content
 
     prompt = """What are the detailed policies and approaches in the manifesto according to this candidate
     on the following sections:
-    1. Economic development
-    2. Education development
-    3. Energy
-    4. Health development
-    5. Security
-    6. Law
-    7. Transportation development
-    8. Infrastructure development
-    9. International relations
-    Please provide a comprehensive description for each policy area, including specific details, numerical targets, timelines, and any unique initiatives where available."""
+    1. Economic Policy and Growth Strategies
+    2. Education Reform and Innovation
+    3. Energy and Sustainability
+    4. Healthcare System and Public Health
+    5. National Security and Defense
+    6. Legal Framework and Judicial Reform
+    7. Transportation and Mobility
+    8. Infrastructure Development and Modernization
+    9. Foreign Policy and International Relations
+    Please provide a comprehensive description for each policy area(must provide a description for each section), including specific details, numerical targets, timelines, and any unique initiatives where available."""
     
     responses = {}
     for candidate in candidates:
         responses[candidate] = await get_candidate_response(candidate, prompt)
 
+    # Construct the policies string outside the f-string
+    policies_string = "".join(f"{candidate}'s policies:\n{response}\n\n" for candidate, response in responses.items())
+
     comparison_prompt = f"""
     Compare the following policies and approaches from {', '.join(candidates)}:
 
-    {"".join(f"{candidate}'s policies:\n{response}\n\n" for candidate, response in responses.items())}
+    {policies_string}
 
     Instructions:
     1. Provide a detailed comparison in a table format, highlighting differences and similarities.
@@ -209,16 +229,17 @@ Answer:"""
     7. Ensure that the comparison is comprehensive and captures all relevant information from the provided responses, including numerical targets and timelines where available.
 
     Comparison should be done only under the following sections:
-    1. Economic development
-    2. Education development
-    3. Energy
-    4. Health development
-    5. Security
-    6. Law
-    7. Transportation development
-    8. Infrastructure development
-    9. International relations
+    1. Economic Policy and Growth Strategies
+    2. Education Reform and Innovation
+    3. Energy and Sustainability
+    4. Healthcare System and Public Health
+    5. National Security and Defense
+    6. Legal Framework and Judicial Reform
+    7. Transportation and Mobility
+    8. Infrastructure Development and Modernization
+    9. Foreign Policy and International Relations
     """
+    
     comparison = await generate_response(comparison_prompt, client, tavily_client, candidate_vector_stores[candidates[0]], None, 0)
     return comparison
 
