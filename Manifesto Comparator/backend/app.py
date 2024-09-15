@@ -72,12 +72,18 @@ async def compare(query: ComparisonQuery):
     try:
         # Use the relevant candidate vector stores for comparison
         relevant_vector_stores = {candidate: candidate_vector_stores[candidate] for candidate in query.candidates if candidate in candidate_vector_stores}
-        comparison = await compare_candidates(query.candidates, openai_client,tavily_client, relevant_vector_stores)
+        
+        # Check if any of the relevant vector stores is None
+        if any(store is None for store in relevant_vector_stores.values()):
+            logger.error("One or more candidate vector stores are None.")
+            return {"error": "One or more candidate vector stores are not initialized."}
+        
+        comparison = await compare_candidates(query.candidates, openai_client, tavily_client, relevant_vector_stores)
         logger.info(f"Generated comparison: {comparison}")
         return {"comparison": comparison}
     except Exception as e:
-        logger.error(f"Error generating comparison: {e}")
-        return {"error": "Failed to generate comparison."}
+        logger.error(f"Error generating comparison: {e}", exc_info=True)
+        return {"error": f"Failed to generate comparison: {str(e)}"}
 
 from win_predictor import extract_data_from_urls, analyze_content, initialize_clients_2
 

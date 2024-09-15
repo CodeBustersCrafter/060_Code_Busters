@@ -58,7 +58,7 @@ async def analyze_content(content, openai_client,tavily_client):
     Additional Context: {tavily_context}
 
     1. List the top 5 candidates based on the analysis.
-    2. Organize the data for plotting various graphs.
+    2. Organize the data for plotting various graphs(One of data analysis should be based on provinces and the graph should be a map).
 
     Your response for the 2nd point should be in JSON format following Streamlit library syntax. For each graph, include a key-value pair where the key is the graph name, and the value is an object containing the data and the type of the graph.
 
@@ -73,7 +73,7 @@ async def analyze_content(content, openai_client,tavily_client):
         messages=[{"role": "user", "content": prompt}],
         temperature=0.6,
         top_p=0.7,
-        max_tokens=4096
+        max_tokens=5120
     )
     return completion.choices[0].message.content
 

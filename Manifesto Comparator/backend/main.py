@@ -53,20 +53,30 @@ async def retrieve_context(query, vector_store, top_k=5):
     results = vector_store.similarity_search(query, k=top_k)
     return "\n".join([doc.page_content for doc in results])
 
-async def generate_response(prompt, openai_client, tavily_client, vector_store, memory, type, candidate_vector_stores=None):
-    
-    context = await retrieve_context(prompt, vector_store)
-    
-    if candidate_vector_stores is not None:
-        for candidate, store in candidate_vector_stores.items():
-            candidate_context = await retrieve_context(prompt, store)
-            context += f"\n\n{candidate} context:\n{candidate_context}"
-    
+async def generate_response(prompt, openai_client, tavily_client, vector_store, memory, type):
+    # Check if the prompt is a greeting or simple query
+
+    if is_greeting_or_simple_query(prompt):
+        completion = await openai_client.chat.completions.create(
+            model="meta/llama-3.1-405b-instruct",
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.6,
+            top_p=0.7,
+            max_tokens=4096
+        )
+        response = completion.choices[0].message.content
+        print("greeting or simple query")
+        if type == 1:
+            memory.save_context({"input": prompt}, {"output": response})
+        return response
+
+    context = await retrieve_context(prompt, vector_store)    
 
     if type == 1:
         # Retrieve conversation history from memory
         history = memory.load_memory_variables({})
         history_context = "\n".join([f"{m.type}: {m.content}" for m in history.get("history", [])])
+        print(history_context)
         context = f"Conversation History:\n{history_context}\n\nContext: {context}\n\n"
         # Retrieve additional context from Tavily
         tavily_context = tavily_client.search(query=prompt)
@@ -79,9 +89,29 @@ async def generate_response(prompt, openai_client, tavily_client, vector_store, 
         messages=[{"role": "user", "content": full_prompt}],
         temperature=0.3,
         top_p=0.9,
-        max_tokens=2048
+        max_tokens=4096
     )
-    return completion.choices[0].message.content
+    response = completion.choices[0].message.content
+
+    if type == 1:
+        # Save the interaction to memory
+        memory.save_context({"input": prompt}, {"output": response})
+    
+    return response
+def is_greeting_or_simple_query(prompt):
+        common_phrases = {
+            "greetings": ["hello", "hi", "hey", "greetings", "good morning", "good afternoon", "good evening"],
+            "queries": ["how are you", "what's up", "how's it going", "what's new"],
+            "farewells": ["goodbye", "bye", "farewell", "see you", "take care", "have a good day", "until next time"]
+        }
+        
+        prompt_lower = prompt.lower().strip()
+        
+        return any(
+            phrase in prompt_lower
+            for category in common_phrases.values()
+            for phrase in category
+        )
 
 # New function to create vector stores for each candidate
 def create_candidate_vector_stores():
@@ -113,18 +143,10 @@ def create_candidate_vector_stores():
         except Exception as e:
             print(f"Error reading {file_name}: {e}")
     
-    if not vector_stores:
-        return None
-    
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
-    chunks = text_splitter.split_text(text)
-    
-    embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
-    vector_store = FAISS.from_texts(chunks, embeddings)
-    return vector_store
+    return vector_stores
 
 # New function to compare two candidates
-async def compare_candidates(candidate1, candidate2, openai_client, tavily_client, candidate_vector_stores):
+async def compare_candidates(candidates, client, tavily_client, candidate_vector_stores):
     if candidate_vector_stores is None:
         print("Failed to create or retrieve candidate vector stores.")
         return
@@ -197,8 +219,7 @@ Answer:"""
     8. Infrastructure development
     9. International relations
     """
-
-    comparison = await generate_response(comparison_prompt, client, candidate_vector_stores[candidates[0]], candidate_vector_stores)
+    comparison = await generate_response(comparison_prompt, client, tavily_client, candidate_vector_stores[candidates[0]], None, 0)
     return comparison
 
 if __name__ == "__main__":
