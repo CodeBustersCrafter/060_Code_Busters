@@ -42,8 +42,7 @@ class Query(BaseModel):
     prompt: str
 
 class ComparisonQuery(BaseModel):
-    candidate1: str
-    candidate2: str
+    candidates: list[str]
 
 @app.get("/")
 async def root():
@@ -57,7 +56,7 @@ async def generate(query: Query):
         logger.error("Vector store is not initialized.")
         return {"error": "Vector store is not initialized."}
     try:
-        response = await generate_response(query.prompt, client, vector_store)
+        response = await generate_response(query.prompt, client, vector_store, candidate_vector_stores)
         logger.info(f"Generated response: {response}")
         return {"response": response}
     except Exception as e:
@@ -66,12 +65,14 @@ async def generate(query: Query):
 
 @app.post("/compare")
 async def compare(query: ComparisonQuery):
-    logger.info(f"Received comparison request for {query.candidate1} and {query.candidate2}")
+    logger.info(f"Received comparison request for {', '.join(query.candidates)}")
     if candidate_vector_stores is None:
         logger.error("Candidate vector stores are not initialized.")
         return {"error": "Candidate vector stores are not initialized."}
     try:
-        comparison = await compare_candidates(query.candidate1, query.candidate2, client, candidate_vector_stores)
+        # Use the relevant candidate vector stores for comparison
+        relevant_vector_stores = {candidate: candidate_vector_stores[candidate] for candidate in query.candidates if candidate in candidate_vector_stores}
+        comparison = await compare_candidates(query.candidates, client, relevant_vector_stores)
         logger.info(f"Generated comparison: {comparison}")
         return {"comparison": comparison}
     except Exception as e:

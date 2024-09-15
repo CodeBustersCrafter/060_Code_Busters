@@ -42,13 +42,12 @@ def fetch_win_predictor_data():
         st.error(f"An error occurred: {e}")
         return {}
 
-def compare_manifestos(candidate1, candidate2):
+def compare_manifestos(candidates):
     headers = {
         "Content-Type": "application/json"
     }
     payload = {
-        "candidate1": candidate1,
-        "candidate2": candidate2
+        "candidates": candidates
     }
     try:
         response = requests.post(MANIFESTO_API_URL, headers=headers, data=json.dumps(payload))
@@ -86,13 +85,15 @@ def election_chatbot():
             st.markdown(f"**You:** {msg['text']}")
         else:
             st.markdown(f"**Chat Bot:** {msg['text']}")
-#Global predicted data
+
+# Global predicted data
 data = None
+
 def win_predictor():
     global data
     st.header("📈 Win Predictor")
-    if(data==None):
-       data = fetch_win_predictor_data()
+    if data is None:
+        data = fetch_win_predictor_data()
     temp = data.split("```")
     description = temp[0]
     data = temp[1]
@@ -250,34 +251,54 @@ def manifesto_comparator():
     st.header("📄 Election Manifesto Comparator")
     
     candidates = [
-        "Ranil Wickremesinghe",
-        "Sajith Premadasa",
-        "Anura Kumara Dissanayake",
-        "Namal Rajapaksa",
-        "Dilith Jayaweera"
+        "Ranil",
+        "Sajith",
+        "Anura",
+        "Namal",
+        "Dilith"
+    ]
+
+    candidate_options = [
+        "Ranil Wickremesinghe - Independent (Incumbent President)",
+        "Sajith Premadasa - Samagi Jana Balawegaya (SJB)",
+        "Anura Kumara Dissanayake - National People's Power (NPP)",
+        "Namal Rajapaksa - Sri Lanka Podujana Peramuna (SLPP)",
+        "Dilith Jayaweera - Mawbima Janatha Party (MJP)"
     ]
 
     col1, col2 = st.columns(2)
 
     with col1:
-        candidate1 = st.selectbox("Select first candidate:", candidates, key="candidate1")
-        st.write(f"Manifesto for {candidate1}")
+        selected_candidate1 = st.selectbox(
+            "Select first candidate:",
+            options=candidate_options,
+            index=0
+        )
 
     with col2:
-        candidate2 = st.selectbox("Select second candidate:", candidates, key="candidate2")
-        st.write(f"Manifesto for {candidate2}")
+        selected_candidate2 = st.selectbox(
+            "Select second candidate:",
+            options=candidate_options,
+            index=1
+        )
 
     if st.button("💡 Compare Manifestos"):
-        if candidate1 == candidate2:
+        if selected_candidate1 == selected_candidate2:
             st.warning("Please select two different candidates.")
         else:
+            # Map selected options back to original candidate names
+            selected_names = [
+                candidates[candidate_options.index(selected_candidate1)],
+                candidates[candidate_options.index(selected_candidate2)]
+            ]
+            
             with st.spinner("Generating comparison..."):
                 progress_placeholder = st.empty()
                 progress_bar = progress_placeholder.progress(0)
                 for i in range(100):
                     time.sleep(0.01)
                     progress_bar.progress(i + 1)
-                response = compare_manifestos(candidate1, candidate2)
+                response = compare_manifestos(selected_names)
                 progress_placeholder.empty()
                 st.success("**Comparison:**")
                 st.write(response)

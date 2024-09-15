@@ -18,9 +18,7 @@ def initialize_client():
 
 def create_vector_db():
     try:
-        # Get the directory where the script is located
         script_dir = os.path.dirname(os.path.realpath(__file__))
-        # Construct the full path to 'text_file_db.txt'
         file_path = os.path.join(script_dir, "text_file_db.txt")
         
         with open(file_path, "r", encoding="utf-8") as file:
@@ -33,68 +31,146 @@ def create_vector_db():
         print(f"Error reading file: {e}")
         return None
     
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=5000, chunk_overlap=1000)
     chunks = text_splitter.split_text(text)
     
     embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
     vector_store = FAISS.from_texts(chunks, embeddings)
     return vector_store
 
-async def retrieve_context(query, vector_store, top_k=3):
+async def retrieve_context(query, vector_store, top_k=5):
     results = vector_store.similarity_search(query, k=top_k)
     return "\n".join([doc.page_content for doc in results])
 
-async def generate_response(prompt, client, vector_store):
+async def generate_response(prompt, client, vector_store, candidate_vector_stores=None):
     context = await retrieve_context(prompt, vector_store)
+    
+    if candidate_vector_stores is not None:
+        for candidate, store in candidate_vector_stores.items():
+            candidate_context = await retrieve_context(prompt, store)
+            context += f"\n\n{candidate} context:\n{candidate_context}"
+    
     full_prompt = f"Context: {context}\n\nQuestion: {prompt}\n\nAnswer:"
     
     completion = await client.chat.completions.create(
         model="meta/llama-3.1-405b-instruct",
         messages=[{"role": "user", "content": full_prompt}],
-        temperature=0.6,
-        top_p=0.7,
-        max_tokens=1024
+        temperature=0.3,
+        top_p=0.9,
+        max_tokens=2048
     )
     return completion.choices[0].message.content
 
-# New function to create vector stores for each candidate
 def create_candidate_vector_stores():
-    try:
-        # Get the directory where the script is located
-        script_dir = os.path.dirname(os.path.realpath(__file__))
-        # Construct the full path to 'text_file_db.txt'
-        file_path = os.path.join(script_dir, "manifest.txt")
-        
-        with open(file_path, "r", encoding="utf-8") as file:
-            text = file.read()
-        print("Manifest File read successfully")
-    except UnicodeDecodeError as e:
-        print(f"UnicodeDecodeError: {e}")
-        return None
-    except Exception as e:
-        print(f"Error reading file: {e}")
-        return None
+    script_dir = os.path.dirname(os.path.realpath(__file__))
+    manifests = {
+        "Ranil": "ranil_manifest.txt",
+        "Sajith": "sajith_manifest.txt",
+        "Anura": "anura_manifest.txt",
+        "Namal": "namal_manifest.txt",
+        "Dilith": "dilith_manifest.txt"
+    }
     
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
-    chunks = text_splitter.split_text(text)
-    
+    vector_stores = {}
     embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
-    vector_store = FAISS.from_texts(chunks, embeddings)
-    return vector_store
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
+    
+    for candidate, file_name in manifests.items():
+        try:
+            file_path = os.path.join(script_dir, file_name)
+            with open(file_path, "r", encoding="utf-8") as file:
+                text = file.read()
+            print(f"{candidate} manifest file read successfully")
+            
+            chunks = text_splitter.split_text(text)
+            vector_stores[candidate] = FAISS.from_texts(chunks, embeddings)
+            
+        except UnicodeDecodeError as e:
+            print(f"UnicodeDecodeError in {file_name}: {e}")
+        except Exception as e:
+            print(f"Error reading {file_name}: {e}")
+    
+    if not vector_stores:
+        return None
+    
+    return vector_stores
 
-# New function to compare two candidates
-async def compare_candidates(candidate1, candidate2, client, candidate_vector_stores):
+async def compare_candidates(candidates, client, candidate_vector_stores):
     if candidate_vector_stores is None:
-        print("Failed to create candidate_vector_stores.")
+        print("Failed to create or retrieve candidate vector stores.")
         return
-    prompt = f"""Compare the manifestos of {candidate1} and {candidate2} based on the text. Provide a detailed comparison of their key policies and approaches.
-    give me the response comparing both of them and response should be like a table. At the end of the table merge the both sides add common policies'"""
+
+    async def get_candidate_response(candidate, prompt):
+        if candidate not in candidate_vector_stores:
+            return f"No data available for {candidate}."
+        context = await retrieve_context(prompt, candidate_vector_stores[candidate], top_k=10)  # Increased top_k for more context
+        full_prompt = f"""Context (from {candidate}'s manifesto): {context}
+
+Question: {prompt}
+
+Instructions:
+1. Carefully analyze the provided context from {candidate}'s policy details.
+2. Extract and summarize the specific policies and approaches mentioned for each of the requested sections.
+3. If a particular section is not addressed in the context, state "No specific information available" for that section.(If there is a little bit info about it, please use those data)
+4. Provide a concise but comprehensive answer, ensuring no relevant information is omitted.
+5. Include any numerical data, targets, or timelines mentioned in the manifesto.
+6. Highlight any unique or standout policies that differentiate this candidate from others.
+
+Answer:"""
+        completion = await client.chat.completions.create(
+            model="meta/llama-3.1-405b-instruct",
+            messages=[{"role": "user", "content": full_prompt}],
+            temperature=0.2,
+            top_p=0.95,
+            max_tokens=4096
+        )
+        return completion.choices[0].message.content
+
+    prompt = """What are the detailed policies and approaches in the manifesto according to this candidate
+    on the following sections:
+    1. Economic development
+    2. Education development
+    3. Energy
+    4. Health development
+    5. Security
+    6. Law
+    7. Transportation development
+    8. Infrastructure development
+    9. International relations
+    Please provide a comprehensive description for each policy area, including specific details, numerical targets, timelines, and any unique initiatives where available."""
     
-    response = await generate_response(prompt, client, candidate_vector_stores)
-    print(response)
-    return response
-    
-    
+    responses = {}
+    for candidate in candidates:
+        responses[candidate] = await get_candidate_response(candidate, prompt)
+
+    comparison_prompt = f"""
+    Compare the following policies and approaches from {', '.join(candidates)}:
+
+    {"".join(f"{candidate}'s policies:\n{response}\n\n" for candidate, response in responses.items())}
+
+    Instructions:
+    1. Provide a detailed comparison in a table format, highlighting differences and similarities.
+    2. Include all nine policy areas for each candidate.
+    3. If there's no data available for a candidate in a specific area, explicitly state 'No data available' in their column.
+    4. At the end of the table, add a section for common (similar) policies among all candidates.
+    5. Highlight any unique or innovative policies proposed by each candidate.
+    6. Include a brief analysis of the overall focus and priorities of each candidate based on their policies.
+    7. Ensure that the comparison is comprehensive and captures all relevant information from the provided responses, including numerical targets and timelines where available.
+
+    Comparison should be done only under the following sections:
+    1. Economic development
+    2. Education development
+    3. Energy
+    4. Health development
+    5. Security
+    6. Law
+    7. Transportation development
+    8. Infrastructure development
+    9. International relations
+    """
+
+    comparison = await generate_response(comparison_prompt, client, candidate_vector_stores[candidates[0]], candidate_vector_stores)
+    return comparison
 
 if __name__ == "__main__":
     import asyncio
@@ -109,10 +185,18 @@ if __name__ == "__main__":
         response = await generate_response(prompt, client, vector_store)
         print(response)
         
-        # Example usage of the new comparison function
         candidate_vector_stores = create_candidate_vector_stores()
-        comparison = await compare_candidates("Sajith", "Ranil", client, candidate_vector_stores)
-        print("\nComparison of Sajith and Ranil's manifestos:")
+        candidates = ["Sajith", "Ranil", "Anura", "Namal", "Dilith"]
+        comparison = await compare_candidates(candidates, client, candidate_vector_stores)
+        print("\nComparison of candidates' manifestos:")
         print(comparison)
+        
+        # Debug information
+        print("\nDebug Information:")
+        for candidate, store in candidate_vector_stores.items():
+            if store:
+                print(f"{candidate}: Vector store created with {len(store.index_to_docstore_id)} documents")
+            else:
+                print(f"{candidate}: No vector store created")
     
     asyncio.run(main())
