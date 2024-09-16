@@ -155,6 +155,25 @@ async def win_predictor():
         logger.error(f"Error in win predictor: {e}")
         return {"error": "Failed to generate win predictor analysis."}
 
+from overall_predictor import extract_data_overeall_from_urls, analyze_overall_content, initialize_clients_3
+
+@app.get("/overall_predictor")
+async def win_predictor():
+    openai_client,tavily_client = initialize_clients_3()
+    logger.info("Overall predictor endpoint accessed.")
+    try:
+        urls = [
+            "https://numbers.lk/analysis/akd-maintains-lead-in-numbers-lk-s-2nd-pre-election-poll-ranil-surges-to-second-place",
+            "https://www.ihp.lk/press-releases/ak-dissanayake-and-sajith-premadasa-led-august-voting-intent-amongst-all-adults"
+        ]
+        extracted_content = extract_data_overeall_from_urls(urls)
+        analysis = await analyze_overall_content(extracted_content, openai_client, tavily_client)
+        logger.info(f"Generated overall predictor analysis: {analysis}")
+        return {"data": analysis}
+    except Exception as e:
+        logger.error(f"Error in win predictor: {e}")
+        return {"error": "Failed to generate overrall predictor analysis."}
+
 
 if __name__ == "__main__":
     import uvicorn
