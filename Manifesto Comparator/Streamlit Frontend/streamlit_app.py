@@ -318,7 +318,32 @@ if 'app_mode' not in st.session_state:
 
 def set_app_mode(mode):
     st.session_state['app_mode'] = mode
+def common():
+    col1,col2 = st.columns(2)
+    st.image("./assets/number1.png")
+    st.write("Source: https://numbers.lk/analysis/pre-election-poll-2-results-2nd-vote-intentions")
+    st.write("")
+    with col1:
+        st.image("./assets/ihp1.png")
+        st.write("Source: https://www.ihp.lk/press-releases/ak-dissanayake-and-sajith-premadasa-led-august-voting-intent-amongst-all-adults")
+        st.write("")
+    with col2:
+        st.image("./assets/helakuru1.png")
+        st.write("Source: https://www.helakuru.lk")
+        st.write("")
 
+###############################
+#update this
+    st.image("./assets/number1.png",caption="Mekata twitter eke photo ekak danna")
+    st.write("Source: https://twitter link eka danna")
+    st.markdown('''
+        <div style="background-color: #f0f0f0; padding: 15px; border-radius: 5px; border-left: 5px solid #ff0000;">
+            <p style="color: #333; margin: 0;">
+                <strong>Note:</strong> mekata bot scene eka danna
+            </p>
+        </div>
+    ''', unsafe_allow_html=True)
+#################################
 def home():
     st.markdown(
         """
@@ -478,6 +503,7 @@ def main():
 
     st.title("🗳️ Election RAG Assistant")
     st.write("Click on the buttons in the sidebar to use different features of the application.")
+    common()
 
     if st.session_state["app_mode"] == "Home":
         home()
