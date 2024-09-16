@@ -29,7 +29,7 @@ app.add_middleware(
 
 # Initialize client and vector stores
 try:
-    openai_client,tavily_client,memory = initialize_clients()
+    openai_client,tavily_client,memory,gemini_model = initialize_clients()
     vector_store = create_vector_db()
     candidate_vector_stores = create_candidate_vector_stores()
     if vector_store is None or candidate_vector_stores is None:
@@ -96,7 +96,7 @@ async def generate(query: Query):
         else:
             return {"error": "Unsupported language selected."}
 
-        response = await generate_response(translated_prompt, openai_client, tavily_client, vector_store, memory, 1)
+        response = await generate_response(translated_prompt, openai_client, tavily_client, vector_store, memory, 1,gemini_model)
 
         # Translate response back to the selected language if necessary
         if query.language.lower() == "english":

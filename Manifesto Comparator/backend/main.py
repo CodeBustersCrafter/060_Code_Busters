@@ -1,4 +1,5 @@
 import os
+import asyncio
 from openai import AsyncOpenAI
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import FAISS
@@ -6,8 +7,15 @@ from langchain_huggingface import HuggingFaceEmbeddings
 from dotenv import load_dotenv
 from tavily import Client as TavilyClient
 from langchain.memory import ConversationBufferMemory
+import google.generativeai as genai
+from sklearn.metrics.pairwise import cosine_similarity
+from sentence_transformers import SentenceTransformer
+import concurrent.futures
 
 load_dotenv()
+
+# Initialize SentenceTransformer for similarity
+similarity_model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
 
 def initialize_clients():
     openai_api_key = os.getenv("OPENAI_API_KEY")
@@ -23,9 +31,27 @@ def initialize_clients():
         raise ValueError("TAVILY_API_KEY is not set in the environment variables.")
     tavily_client = TavilyClient(tavily_api_key)
     
+    gemini_api_key = os.getenv("GEMINI_API_KEY")
+    if not gemini_api_key:
+        raise ValueError("GEMINI_API_KEY is not set in the environment variables.")
+    genai.configure(api_key=gemini_api_key)
+    
+    generation_config = {
+        "temperature": 0.7,
+        "top_p": 0.9,
+        "top_k": 40,
+        "max_output_tokens": 4096,
+        "response_mime_type": "text/plain",
+    }
+    
+    gemini_model = genai.GenerativeModel(
+        model_name="gemini-1.5-flash",
+        generation_config=generation_config,
+    )
+    
     memory = ConversationBufferMemory(return_messages=True)
     
-    return openai_client, tavily_client, memory
+    return openai_client, tavily_client, memory, gemini_model
 
 def create_vector_db():
     try:
@@ -42,29 +68,81 @@ def create_vector_db():
         print(f"Error reading file: {e}")
         return None
     
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=5000, chunk_overlap=1000)
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=2000, chunk_overlap=200)
     chunks = text_splitter.split_text(text)
     
     embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
     vector_store = FAISS.from_texts(chunks, embeddings)
     return vector_store
 
-async def retrieve_context(query, vector_store, top_k=10):
-    results = vector_store.similarity_search(query, k=top_k)
-    return "\n".join([doc.page_content for doc in results])
+async def retrieve_context(query, vector_store, top_k=5):
+    results = vector_store.similarity_search_with_score(query, k=top_k)
+    weighted_context = ""
+    for doc, score in results:
+        weighted_context += f"{doc.page_content} (relevance: {score})\n\n"
+    return weighted_context
 
-async def generate_response(prompt, openai_client, tavily_client, vector_store, memory, type):
-    # Check if the prompt is a greeting or simple query
-    if is_greeting_or_simple_query(prompt):
+def compute_similarity(text1, text2):
+    embeddings = similarity_model.encode([text1, text2])
+    similarity = cosine_similarity([embeddings[0]], [embeddings[1]])[0][0]
+    return similarity
+
+def check_consistency(response1, response2, threshold=0.75):
+    similarity = compute_similarity(response1, response2)
+    return similarity >= threshold
+
+def aggregate_responses(response1, response2, is_consistent):
+    if is_consistent:
+        aggregated = f"{response1}\n\nAdditionally, {response2}"
+    else:
+        aggregated = response1 if len(response1) > len(response2) else response2
+    return aggregated
+
+async def fact_check_response(response, tavily_client):
+    fact_check_prompt = f"Fact-check the following statement: {response}"
+    try:
+        fact_check_results = tavily_client.search(query=fact_check_prompt)
+        return fact_check_results
+    except Exception as e:
+        print(f"Error during fact-checking: {e}")
+        return "No additional context available."
+
+async def combine_responses(response1, response2, tavily_client):
+    is_consistent = check_consistency(response1, response2)
+    
+    aggregated_response = aggregate_responses(response1, response2, is_consistent)
+    
+    fact_check_results = await fact_check_response(aggregated_response, tavily_client)
+    
+    combine_responses = f"aggregated_response:\n{aggregated_response}\n\fact_check_results: {fact_check_results}\n\n"
+    
+    return combine_responses
+
+async def generate_response(prompt, openai_client, tavily_client, vector_store, memory, type, gemini_model):
+
+    async def get_openai_response(prompt):
         completion = await openai_client.chat.completions.create(
             model="meta/llama-3.1-405b-instruct",
-            messages=[{"role": "system", "content": "You are a helpful assistant that provides information about Sri Lankan Elections 2024."}, {"role": "user", "content": prompt}],
-            temperature=0.6,
+            messages=[
+                {"role": "system", "content": "You are a helpful assistant that provides information about Sri Lankan Elections 2024."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.5,
             top_p=0.7,
-            max_tokens=4096
+            max_tokens=2048
         )
-        response = completion.choices[0].message.content
+        return completion.choices[0].message.content
+    
+    async def get_gemini_response(prompt):
+        loop = asyncio.get_event_loop()
+        chat_session = gemini_model.start_chat()
+        response = await loop.run_in_executor(None, chat_session.send_message, prompt)
+        return response.text
+    
+    if is_greeting_or_simple_query(prompt):
         print("greeting or simple query")
+        response = await get_gemini_response(prompt)
+    
         if type == 1:
             memory.save_context({"input": prompt}, {"output": response})
         return response
@@ -72,47 +150,58 @@ async def generate_response(prompt, openai_client, tavily_client, vector_store, 
     context = await retrieve_context(prompt, vector_store)    
 
     if type == 1:
-        # Retrieve conversation history from memory
         history = memory.load_memory_variables({})
         history_context = "\n".join([f"{m.type}: {m.content}" for m in history.get("history", [])])
         print(history_context)
         context = f"Conversation History:\n{history_context}\n\nContext: {context}\n\n"
-        # Retrieve additional context from Tavily
-        tavily_context = tavily_client.search(query=prompt)
-        context += f"Additional Context: {tavily_context}\n\n"
+        try:
+            tavily_context = tavily_client.search(query=prompt)
+            context += f"Additional Context: {tavily_context}\n\n"
+        except Exception as e:
+            print(f"Error fetching Tavily context: {e}")
+            context += "Additional Context: No additional context available.\n\n"
 
     full_prompt = f"{context}Question: {prompt}\n\nAnswer:"
     
-    completion = await openai_client.chat.completions.create(
-        model="meta/llama-3.1-405b-instruct",
-        messages=[{"role": "system", "content": "You are a helpful assistant that provides information about Sri Lankan Elections 2024."}, {"role": "user", "content": full_prompt}],
-        temperature=0.6,
-        top_p=0.7,
-        max_tokens=4096
-    )
-    response = completion.choices[0].message.content
-
     if type == 1:
-        # Save the interaction to memory
-        memory.save_context({"input": prompt}, {"output": response})
-    
-    return response
-def is_greeting_or_simple_query(prompt):
-        common_phrases = {
-            "greetings": ["hello", "hi", "hey", "greetings", "good morning", "good afternoon", "good evening"],
-            "queries": ["how are you", "what's up", "how's it going", "what's new"],
-            "farewells": ["goodbye", "bye", "farewell", "see you", "take care", "have a good day", "until next time"]
-        }
+        openai_response_task = asyncio.create_task(get_openai_response(full_prompt))
+        gemini_response_task = asyncio.create_task(get_gemini_response(full_prompt))
         
-        prompt_lower = prompt.lower().strip()
-        
-        return any(
-            phrase in prompt_lower
-            for category in common_phrases.values()
-            for phrase in category
+        openai_response, gemini_response = await asyncio.gather(
+            openai_response_task,
+            gemini_response_task
         )
 
-# New function to create vector stores for each candidate
+        combined_response = await combine_responses(openai_response, gemini_response, tavily_client)
+        final_prompt = f"""You are an AI assistant tasked with validating and summarizing information about the Sri Lankan Elections 2024. Please review the following aggregated response, fact-check the information, and provide a concise, accurate summary that a user would find informative and easy to understand.
+If the fact-check results are not available, please provide a summary of the information.
+Here's an aggregated response about the Sri Lankan Elections 2024. Please validate this information, correct any inaccuracies, and present a clear, factual summary for the end user:
+Make sure you Don't add any markdown syntax to the topic of the response(It is a must)
+{combined_response}"""
+        
+        final_response = await get_gemini_response(final_prompt)
+        memory.save_context({"input": prompt}, {"output": final_response})
+        return final_response
+    
+    else:
+        return await get_openai_response(full_prompt)
+
+def is_greeting_or_simple_query(prompt):
+    common_phrases = {
+        "greetings": ["hello", "hi", "hey", "greetings", "morning", "afternoon", "evening"],
+        "queries": ["how are you", "what's up", "how's it going", "what's new"],
+        "farewells": ["goodbye", "bye", "farewell", "see you", "take care"],
+        "thanks": ["thank you", "thanks", "much appreciated", "thanks a lot", "thank you very much"]
+    }
+    
+    prompt_lower = prompt.lower().strip()
+    
+    return any(
+        phrase in prompt_lower
+        for category in common_phrases.values()
+        for phrase in category
+    )
+
 def create_candidate_vector_stores():
     script_dir = os.path.dirname(os.path.realpath(__file__))
     manifests = {
@@ -125,9 +214,9 @@ def create_candidate_vector_stores():
     
     vector_stores = {}
     embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
     
-    for candidate, file_name in manifests.items():
+    def process_manifest(candidate, file_name):
         try:
             file_path = os.path.join(script_dir, file_name)
             with open(file_path, "r", encoding="utf-8") as file:
@@ -135,17 +224,26 @@ def create_candidate_vector_stores():
             print(f"{candidate} manifest file read successfully")
             
             chunks = text_splitter.split_text(text)
-            vector_stores[candidate] = FAISS.from_texts(chunks, embeddings)
+            return FAISS.from_texts(chunks, embeddings)
             
         except UnicodeDecodeError as e:
             print(f"UnicodeDecodeError in {file_name}: {e}")
         except Exception as e:
             print(f"Error reading {file_name}: {e}")
+        return None
+    
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        future_to_candidate = {executor.submit(process_manifest, candidate, file_name): candidate for candidate, file_name in manifests.items()}
+        for future in concurrent.futures.as_completed(future_to_candidate):
+            candidate = future_to_candidate[future]
+            try:
+                vector_stores[candidate] = future.result()
+            except Exception as exc:
+                print(f'{candidate} generated an exception: {exc}')
     
     return vector_stores
 
-# New function to compare two candidates
-async def compare_candidates(candidates, client, tavily_client, candidate_vector_stores):
+async def compare_candidates(candidates, openai_client, tavily_client, candidate_vector_stores):
     if candidate_vector_stores is None:
         print("Failed to create or retrieve candidate vector stores.")
         return
@@ -166,34 +264,34 @@ async def compare_candidates(candidates, client, tavily_client, candidate_vector
             "Foreign Policy and International Relations"
         ]
         
-        context = ""
-        for section in sections:
-            section_context = await retrieve_context(f"{section} {prompt}", candidate_vector_stores[candidate], top_k=10)
-            context += f"\n{section}:\n{section_context}\n"
+        async def get_section_context(section):
+            return await retrieve_context(f"{section} {prompt}", candidate_vector_stores[candidate], top_k=3)
+        
+        section_contexts = await asyncio.gather(*[get_section_context(section) for section in sections])
+        context = "\n".join(f"{section}:\n{context}\n" for section, context in zip(sections, section_contexts))
 
         full_prompt = f"""Context (from {candidate}'s manifesto): {context}
 
-Question: {prompt}
+        Question: {prompt}
 
-Instructions:
-1. Carefully analyze the provided context for each sections extracted from {candidate}'s manifesto.
-2. Extract and summarize the specific policies and approaches mentioned for each of the requested sections.
-3. If a particular section is not addressed in the context, state "No specific information available" for that section.(If there is a little bit info about it, please use those data)
-4. Provide a concise but comprehensive answer, ensuring no relevant information is omitted.
-5. Include any numerical data, targets, or timelines mentioned in the manifesto.
-6. Highlight any unique or standout policies that differentiate this candidate from others.
-
-Answer:"""
-        completion = await client.chat.completions.create(
+        Instructions:
+        1. Analyze the provided context for each section extracted from {candidate}'s manifesto.
+        2. Summarize the specific policies and approaches mentioned for each section.
+        3. If a section is not addressed, state "No specific information available".
+        4. Provide a concise answer, focusing on key points.
+        5. Include important numerical data, targets, or timelines if mentioned.
+        6. Highlight any unique or standout policies."""
+        
+        completion = await openai_client.chat.completions.create(
             model="meta/llama-3.1-405b-instruct",
             messages=[{"role": "user", "content": full_prompt}],
             temperature=0.3,
             top_p=0.4,
-            max_tokens=5120
+            max_tokens=2048
         )
         return completion.choices[0].message.content
 
-    prompt = """What are the detailed policies and approaches in the manifesto according to this candidate
+    prompt = """Summarize the key policies and approaches in the manifesto for this candidate
     on the following sections:
     1. Economic Policy and Growth Strategies
     2. Education Reform and Innovation
@@ -204,13 +302,11 @@ Answer:"""
     7. Transportation and Mobility
     8. Infrastructure Development and Modernization
     9. Foreign Policy and International Relations
-    Please provide a comprehensive description for each policy area(must provide a description for each section), including specific details, numerical targets, timelines, and any unique initiatives where available."""
+    Provide a brief overview for each policy area, focusing on main points and any unique initiatives."""
     
-    responses = {}
-    for candidate in candidates:
-        responses[candidate] = await get_candidate_response(candidate, prompt)
+    responses = await asyncio.gather(*[get_candidate_response(candidate, prompt) for candidate in candidates])
+    responses = dict(zip(candidates, responses))
 
-    # Construct the policies string outside the f-string
     policies_string = "".join(f"{candidate}'s policies:\n{response}\n\n" for candidate, response in responses.items())
 
     comparison_prompt = f"""
@@ -219,15 +315,15 @@ Answer:"""
     {policies_string}
 
     Instructions:
-    1. Provide a detailed comparison in a table format, highlighting differences and similarities.
+    1. Provide a concise comparison in a table format, highlighting key differences and similarities.
     2. Include all nine policy areas for each candidate.
-    3. If there's no data available for a candidate in a specific area, explicitly state 'No data available' in their column.
-    4. At the end of the table, add a section for common (similar) policies among all candidates.
-    5. Highlight any unique or innovative policies proposed by each candidate.
-    6. Include a brief analysis of the overall focus and priorities of each candidate based on their policies.
-    7. Ensure that the comparison is comprehensive and captures all relevant information from the provided responses, including numerical targets and timelines where available.
+    3. Use 'No data available' for missing information.
+    4. Add a brief section for common policies among all candidates.
+    5. Highlight unique or innovative policies for each candidate.
+    6. Include a short analysis of each candidate's overall focus and priorities.
+    7. Keep the comparison focused on the most important points from the provided responses.
 
-    Comparison should be done only under the following sections:
+    Comparison should cover these sections:
     1. Economic Policy and Growth Strategies
     2. Education Reform and Innovation
     3. Energy and Sustainability
@@ -239,20 +335,20 @@ Answer:"""
     9. Foreign Policy and International Relations
     """
     
-    comparison = await generate_response(comparison_prompt, client, tavily_client, candidate_vector_stores[candidates[0]], None, 0)
+    comparison = await generate_response(comparison_prompt, openai_client, tavily_client, candidate_vector_stores[candidates[0]], None, 0, None)
     return comparison
 
 if __name__ == "__main__":
     import asyncio
     
     async def main():
-        openai_client, tavily_client, memory = initialize_clients()
+        openai_client, tavily_client, memory, gemini_model = initialize_clients()
         vector_store = create_vector_db()
         if vector_store is None:
             print("Failed to create vector store.")
             return
         prompt = "When is the next election in Sri Lanka?"
-        response = await generate_response(prompt, openai_client, tavily_client, vector_store, memory, 1)
+        response = await generate_response(prompt, openai_client, tavily_client, vector_store, memory, 1, gemini_model)
         print(response)
         
         candidate_vector_stores = create_candidate_vector_stores()
