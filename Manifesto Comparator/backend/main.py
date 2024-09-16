@@ -55,7 +55,6 @@ async def retrieve_context(query, vector_store, top_k=5):
 
 async def generate_response(prompt, openai_client, tavily_client, vector_store, memory, type):
     # Check if the prompt is a greeting or simple query
-    print(prompt)
     if is_greeting_or_simple_query(prompt):
         completion = await openai_client.chat.completions.create(
             model="meta/llama-3.1-405b-instruct",
@@ -87,8 +86,8 @@ async def generate_response(prompt, openai_client, tavily_client, vector_store, 
     completion = await openai_client.chat.completions.create(
         model="meta/llama-3.1-405b-instruct",
         messages=[{"role": "system", "content": "You are a helpful assistant that provides information about Sri Lankan Elections 2024."}, {"role": "user", "content": full_prompt}],
-        temperature=0.3,
-        top_p=0.9,
+        temperature=0.6,
+        top_p=0.7,
         max_tokens=4096
     )
     response = completion.choices[0].message.content
@@ -189,7 +188,7 @@ Answer:"""
             model="meta/llama-3.1-405b-instruct",
             messages=[{"role": "user", "content": full_prompt}],
             temperature=0.3,
-            top_p=0.95,
+            top_p=0.4,
             max_tokens=5120
         )
         return completion.choices[0].message.content

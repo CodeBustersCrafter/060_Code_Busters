@@ -102,7 +102,6 @@ async def generate(query: Query):
         if query.language.lower() == "english":
             translated_response = response
         elif query.language.lower() == "sinhala":
-            print(response)
             translated_response = translate_text(response, "en", "si")
         elif query.language.lower() == "tamil":
             translated_response = translate_text(response, "en", "ta")
