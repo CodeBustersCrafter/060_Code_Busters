@@ -265,7 +265,7 @@ async def compare_candidates(candidates, openai_client, tavily_client, candidate
         ]
         
         async def get_section_context(section):
-            return await retrieve_context(f"{section} {prompt}", candidate_vector_stores[candidate], top_k=3)
+            return await retrieve_context(f"{section} {prompt}", candidate_vector_stores[candidate], top_k=5)
         
         section_contexts = await asyncio.gather(*[get_section_context(section) for section in sections])
         context = "\n".join(f"{section}:\n{context}\n" for section, context in zip(sections, section_contexts))
