@@ -1,0 +1,28 @@
+{
+    "Numbers.lk's 2nd Pre-Election Poll": {
+      "data": [
+        {"Candidate": "Anura Kumara Dissanayake (AKD)", "Percentage": 43},
+        {"Candidate": "Ranil Wickremesinghe", "Percentage": 27},
+        {"Candidate": "Sajith Premadasa", "Percentage": 22},
+        {"Candidate": "Namal Rajapaksa", "Percentage": 3}
+      ],
+      "type": "bar"
+    },
+    "Age-wise Support": {
+    "data": [
+      {"Age Group": "18-30", "AKD": 50, "Ranil Wickremesinghe": 20, "Sajith Premadasa": 15},
+      {"Age Group": "31-50", "AKD": 40, "Ranil Wickremesinghe": 30, "Sajith Premadasa": 20},
+      {"Age Group": "51-70", "AKD": 30, "Ranil Wickremesinghe": 40, "Sajith Premadasa": 25},
+      {"Age Group": "71+", "AKD": 20, "Ranil Wickremesinghe": 50, "Sajith Premadasa": 20}
+    ],
+    "type": "line"
+  },
+    "AK Dissanayake (53%) continues to lead Sajith Premadasa (34%) in Presidential Election voting intent": {
+      "data": [
+        {"Candidate": "AK Dissanayake", "Percentage": 53},
+        {"Candidate": "Sajith Premadasa", "Percentage": 34},
+        {"Candidate": "Pres. Ranil Wickremesinghe", "Percentage": 13}
+      ],
+      "type": "bar"
+    }
+  }

@@ -318,33 +318,141 @@ if 'app_mode' not in st.session_state:
 
 def set_app_mode(mode):
     st.session_state['app_mode'] = mode
-def common():
-    col1,col2 = st.columns(2)
-    st.image("./assets/number1.png")
-    st.write("Source: https://numbers.lk/analysis/pre-election-poll-2-results-2nd-vote-intentions")
-    st.write("")
-    with col1:
-        st.image("./assets/ihp1.png")
-        st.write("Source: https://www.ihp.lk/press-releases/ak-dissanayake-and-sajith-premadasa-led-august-voting-intent-amongst-all-adults")
-        st.write("")
-    with col2:
-        st.image("./assets/helakuru1.png")
-        st.write("Source: https://www.helakuru.lk")
-        st.write("")
 
-###############################
-#update this
-    st.image("./assets/number1.png",caption="Mekata twitter eke photo ekak danna")
-    st.write("Source: https://twitter link eka danna")
-    st.markdown('''
-        <div style="background-color: #f0f0f0; padding: 15px; border-radius: 5px; border-left: 5px solid #ff0000;">
-            <p style="color: #333; margin: 0;">
-                <strong>Note:</strong> mekata bot scene eka danna
-            </p>
-        </div>
-    ''', unsafe_allow_html=True)
-#################################
+def common():
+    # Read data from the JSON file
+    with open('./assets/data.json', 'r') as file:
+        data = json.load(file)
+
+    # Iterate through each graph in the data and plot accordingly
+    for graph_name, graph_info in data.items():
+        graph_type = graph_info.get('type')
+        graph_data = graph_info.get('data')
+
+        st.subheader(graph_name)
+
+        if graph_type == "bar":
+            df = pd.DataFrame(graph_data)
+            chart = st.empty()
+            
+            import altair as alt
+            import numpy as np
+
+            def animate_bar_chart():
+                chart_placeholder = st.empty()
+                max_percentage = df['Percentage'].max()
+                color_scale = alt.Scale(scheme='category10')
+                
+                for i in range(51):  # Reduced iterations for faster animation
+                    progress = i / 50
+                    eased_progress = 1 - np.cos((progress * np.pi) / 2) ** 3
+                    
+                    temp_df = df.copy()
+                    temp_df['Percentage'] = temp_df['Percentage'] * eased_progress
+                    temp_df['Order'] = range(len(temp_df))
+                    
+                    base = alt.Chart(temp_df).encode(
+                        x=alt.X('Candidate:N', sort='-y', axis=alt.Axis(labelAngle=-45)),
+                        color=alt.Color('Order:O', scale=color_scale, legend=None)
+                    )
+                    
+                    bars = base.mark_bar().encode(
+                        y=alt.Y('Percentage:Q', scale=alt.Scale(domain=[0, max_percentage]))
+                    )
+                    
+                    text = base.mark_text(
+                        align='center',
+                        baseline='bottom',
+                        dy=-5,
+                        fontSize=14
+                    ).encode(
+                        y=alt.Y('Percentage:Q', scale=alt.Scale(domain=[0, max_percentage])),
+                        text=alt.Text('Percentage:Q', format='.1f')
+                    )
+                    
+                    final_chart = (bars + text).properties(
+                        width=600,
+                        height=400,
+                        title=alt.TitleParams(
+                            text='Candidate Percentages',
+                            fontSize=20,
+                            fontWeight='bold'
+                        )
+                    ).configure_view(
+                        strokeWidth=0
+                    ).configure_axis(
+                        grid=False
+                    )
+                    
+                    chart_placeholder.altair_chart(final_chart, use_container_width=True)
+                    time.sleep(0.001)  # Reduced sleep time for faster animation
+            
+            chart_container = st.container()
+            animate_bar_chart()
+        
+        elif graph_type == "line":
+            df = pd.DataFrame(graph_data)
+            chart_placeholder = st.empty()
+            
+            max_percentage = max(df[candidate].max() for candidate in df.columns if candidate != 'Age Group')
+            color_scale = alt.Scale(scheme='category10')
+            df_melted = df.melt(id_vars=['Age Group'], var_name='Candidate', value_name='Percentage')
+            
+            base = alt.Chart(df_melted).encode(
+                x=alt.X('Age Group:N', sort=df['Age Group'].tolist()),
+                color=alt.Color('Candidate:N', scale=color_scale)
+            )
+            
+            def animate_line_chart():
+                for i in range(1, len(df) + 1):
+                    temp_df = df_melted[df_melted['Age Group'].isin(df['Age Group'][:i])]
+                    
+                    lines = base.mark_line(interpolate='linear').encode(
+                        y=alt.Y('Percentage:Q', scale=alt.Scale(domain=[0, max_percentage]))
+                    ).transform_filter(
+                        alt.FieldOneOfPredicate(field='Age Group', oneOf=temp_df['Age Group'].unique().tolist())
+                    )
+                    
+                    points = base.mark_circle(size=60).encode(
+                        y=alt.Y('Percentage:Q', scale=alt.Scale(domain=[0, max_percentage]))
+                    ).transform_filter(
+                        alt.FieldOneOfPredicate(field='Age Group', oneOf=temp_df['Age Group'].unique().tolist())
+                    )
+                    
+                    text = base.mark_text(
+                        align='center',
+                        baseline='bottom',
+                        dy=-10,
+                        fontSize=14
+                    ).encode(
+                        y=alt.Y('Percentage:Q', scale=alt.Scale(domain=[0, max_percentage])),
+                        text=alt.Text('Percentage:Q', format='.1f')
+                    ).transform_filter(
+                        alt.FieldOneOfPredicate(field='Age Group', oneOf=temp_df['Age Group'].unique().tolist())
+                    )
+                    
+                    final_chart = (lines + points + text).properties(
+                        width=600,
+                        height=400,
+                        title=alt.TitleParams(
+                            text='Age-wise Support for Candidates',
+                            fontSize=20,
+                            fontWeight='bold'
+                        )
+                    ).configure_view(
+                        strokeWidth=0
+                    ).configure_axis(
+                        grid=False
+                    )
+                    
+                    chart_placeholder.altair_chart(final_chart, use_container_width=True)
+                    time.sleep(0.25)  # Reduced sleep time for faster animation
+            
+            animate_line_chart()
+        else:
+            st.write(f"Unsupported graph type: {graph_type}")
 def home():
+    common()
     st.markdown(
         """
         <style>
@@ -503,7 +611,6 @@ def main():
 
     st.title("🗳️ Election RAG Assistant")
     st.write("Click on the buttons in the sidebar to use different features of the application.")
-    common()
 
     if st.session_state["app_mode"] == "Home":
         home()
