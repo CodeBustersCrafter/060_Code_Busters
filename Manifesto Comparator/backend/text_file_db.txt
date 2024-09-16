@@ -1,4 +1,268 @@
 get close to half the vote on the first count. While this indicates that no candidate has succeeded in exciting a majority of voters, it also means that it is increasingly likely that the 2024 election will be the first presidential poll decided on a count of second and third preferences. We urge civil society and the Elections Commission to intensify efforts to educate voters about using their preferences to ensure that every vote counts.”  Analysis of the MRP model estimates for August reveal differences in the support base for each candidate. Support for AK Dissanayake was strongest among the youth, with a majority (53%) supporting him, and among Sinhala voters (42%). The most affluent third of voters (38%) supported both AK Dissanayake and Ranil Wickremesinghe. In contrast, Sajith Premadasa led among the poorest third of voters (40%).
 More than half of Sri Lankan Tamils (55%) and Estate/ Indian Tamils (53%) supported Sajith Premadasa, while two-thirds of Muslims (71%) backed him. R  better estimates. 
 IHP’s SLOTS MRP methodology first estimates the relationship between a wide variety of characteristics about respondents and their opinions – in this case, ‘If there was a Presidential Election today, who would you vote for?’– in a multilevel statistical model that also smooths month to month changes. It then uses a large data file calibrated to the national population to predict voting intent in each month since Oct. 2021, based on what the multilevel model indicates about their probability of voting for various parties (‘post-stratification’) at each point in time. The multilevel model was estimated 100 times to reflect underlying uncertainties in the model and to obtain margins of error. The voting intent results for previous months have changed in this update as more data were collected after the last release and these changes are within the margin of error.
-    Date: 11 September 2024
+
+
+The2024 Sri Lankan presidential electionis scheduled to be held on 21 September 2024, where voters will choose apresidentfor a five-year term.[1][2]Incumbent PresidentRanil Wickremesingheis seeking re-election as anindependentcandidate, making him the first sitting president to run for re-election sinceMahinda Rajapaksain2015.[3][4][5]
+
+Other prominent candidates includeLeader of the OppositionSajith Premadasa,Anura Kumara Dissanayakeof theNPP,andNamal Rajapaksa, son of former President Mahinda Rajapaksa.
+
+Background
+
+The last direct presidential elections held in Sri Lanka were in2019, whereSLPPcandidateGotabaya Rajapaksawon the election in a landslide victory, defeating his main opponentSajith Premadasa.[6][7]
+
+Rajapaksa would eventuallyresignon 14 July 2022 amidst the2022 Sri Lankan protests.[8]This triggered anindirect presidential electionvia Parliament a week later, to elect a successor according to the Article 40 of the Constitution.[9]Ranil Wickremesinghe, who had been appointed asPrime Ministerby Rajapaksa just two months earlier, received the most votes and was sworn in as the 9th President of Sri Lanka on 21 July 2022.[10][11]
+
+Article 40 of the Constitution of Sri Lanka states that "Any person so succeeding to the office of President shall hold office only for the unexpired period of the term of office of the President vacating office.[12]President Wickremesinghe's term is due to expire on 17 November 2024.
+
+Discussion surrounding the 2024 election has been a major topic since the beginning of the year. TheElection Commissionhas stated that the election must be held between 17 September and 16 October, as required by the Constitution. On 26 July, the Election Commission issued aGazettenotification declaring that the election would be held on 21 September 2024, with nominations for candidates to be submitted by 15 August.[13]The commission chose to hold the election on a Saturday, stating that this would help ensure a highvoter turnout. On the same day, Ranil Wickremesinghe announced his candidacy for a second term as president, running as anindependentcandidate.[1][5]
+
+Approximately 17 million people are eligible to vote in this election.[14]
+
+Recent Sri Lankan election results
+Results
+Election results
+Dates of elections	Sri Lanka Podujana Peramuna
+(SLPFA)	Samagi Jana Balawegaya	National People's Power	Tamil National Alliance	United National Party	Others
+Votes	%	Votes	%	Votes	%	Votes	%	Votes	%	Votes	%
+2019 presidential election	6,924,255	52.25%	－	－	418,553	3.16%	－	－	5,564,239	41.99%[i]	345,452	2.35%
+2020 parliamentary election	6,853,690	59.09%	2,771,980	23.90%	445,958	3.84%	327,168	2.82%	249,435	2.15%	950,698	8.20%
+
+
+Electoral system
+
+Type of electoral system
+
+The President of Sri Lanka is elected through a system of limitedranked voting. Voters can express up to three ranked preferences for the presidency. If no candidate receives more than 50% of all valid votes in the first count, all candidates except the two who received the highest number of votes are eliminated. The second and third preference votes of the eliminated candidates are then redistributed to the remaining two candidates until one of them secures an outright majority.[15]
+
+In practice, this system has seen no use. Every presidential election since the first in1982has resulted in a candidate from one of the major parties or alliances winning an outright majority in the first count. Consequently, most voters choose to mark only one candidate on their ballots, and many are either unaware that they can rank multiple candidates or choose not to exercise that prerogative.[16][17]
+
+Voting procedure
+
+The Election Commission outlined the voting procedure on 30 August 2024, detailing the ranked voting system due to the multiple candidates contesting the presidential election, ensuring voters were informed on how to cast and submit their ballots.[18][19]
+
+Postal voting
+
+The Election Commission announced the dates and locations for postal voting in a media release on 29 August 2024. This facility is available only to pre-approved officials engaged in election duties.[20][21]Postal voting will be conducted on 4, 5, 6, 11, and 12 September, strictly according to the provided schedule.[22][23]
+
+Ballot boxes and security systems
+
+TheElection Commission of Sri Lankais reportedly considering the exclusive use of cardboard ballot boxes in the upcoming elections, replacing the traditional wooden ones. A mix of wooden and cardboard ballot boxes was utilised during the2019 Sri Lankan presidential electionand the2020 Sri Lankan parliamentary election.[24]
+
+Candidates
+
+By the end of candidate registration on 15 August, the Election Commission had accepted a total of 39 applications for the presidential election, the highest number ever recorded for a presidential election in Sri Lanka.[25]One candidate, Mohamed Illiyas, died prior to the election.[26]Despite the record number of candidates, none were female.[27][28]
+
+Major candidates
+Candidate	Political office and constituency	Symbol[29]	Endorsements	Notes	Ref.
+
+Ranil Wickremesinghe (75)
+Independent	Current President of Sri Lanka (since 2022)
+Leader of the United National Party (since 1994)
+Former Prime Minister of Sri Lanka (1993–1994, 2001–2004, 2015–2018, 2018-2019, 2022)	Gas Cylinder	
+United National Party
+Breakaway members of the Sri Lanka Podujana Peramuna[30]
+Ceylon Workers' Congress[31]
+De facto Central Committee of the Sri Lanka Freedom Party[32]
+Eelam People's Democratic Party[33]
+Mahajana Eksath Peramuna[34]
+New Lanka Freedom Party[35]
+Tamil Makkal Viduthalai Pulikal[36]
+Declared 26 July 2024
+Previously ran in 1999 and 2005.
+Election manifesto launched on 29 August 2024
+[4][37]
+
+Sajith Premadasa (57)
+Samagi Jana Balawegaya	Current Leader of the Opposition (since 2019)
+Leader of the Samagi Jana Balawegaya (since 2020)
+Colombo	Telephone	
+Samagi Jana Balawegaya
+All Ceylon Makkal Congress[38]
+Freedom People's Congress[39]
+Humane People's Alliance[40]
+Ilankai Tamil Arasu Kachchi[41][42][43]
+Sri Lanka Freedom Party (Dayasiri faction)[44]
+Sri Lanka Muslim Congress[45]
+Tamil Progressive Alliance[46]
+United People's Freedom Alliance[47]
+United Republican Front[48]
+Up-Country People's Front[49]
+Declared 16 May 2023
+Son of former president Ranasinghe Premadasa
+Previously ran in 2019.
+Election manifesto launched on 29 August 2024
+[50][51]
+
+Anura Kumara Dissanayake (55)
+National People's Power	Former Minister and Chief Opposition Whip (2015–2018)
+Leader of the National People's Power (since 2015)
+Leader of the Janatha Vimukthi Peramuna (since 2014)
+Colombo	Compass	
+Janatha Vimukthi Peramuna
+Declared 29 August 2023
+Previously ran in 2019.
+Election manifesto launched on 26 August 2024
+[52][53]
+
+Field Marshal
+Sarath Fonseka (73)
+Independent	5th Chief of the Defence Staff (2009)
+Former Minister of Regional Development (2016–2018), Minister of Wildlife and Sustainable Development (2018)
+18th Commander of the Sri Lanka Army (2005–2009)
+Gampaha	Lantern		
+Declared 25 July 2024
+Previously ran in 2010.
+[54]
+
+Wijeyadasa Rajapakshe (65)
+National Democratic Front	Former Minister of Justice (2022–2024)
+Former Minister of Buddha Sasana (2015–2017), Minister of Higher Education (2018), Minister of Education (2018)
+Colombo	Car		
+Declared on 25 July 2024
+[55]
+
+Namal Rajapaksa (38)
+Sri Lanka Podujana Peramuna	Former Minister of Youth and Sports (2020–2022)
+Hambantota	Flower bud (Pohottuwa)	
+Sri Lanka Podujana Peramuna
+Declared on 7 August 2024
+Son of former president Mahinda Rajapaksa
+Nephew of former president Gotabaya Rajapaksa
+Election manifesto launched on 2 September 2024
+[56][57]
+Minor candidates
+In addition to the six candidates mentioned above, there are 33 other candidates running in the election.[58][59]
+
+Candidate	Party	Symbol[29]	Notes
+Siripala Amarasinghe		Independent	Tyre	Former JVP/UPFA MP for Gampaha.[60] Presidential candidate in 2019.
+Chaminda Anuruddha		Independent	Horseshoe	
+P. Ariyanethiran		Independent	Conch shell	Former ITAK/TNA MP for Batticaloa.[61] Endorsed by the EPRLF, PLOTE, TELO, Tamil National Party and TMK.[62]
+D. M. Bandaranaike		Independent	Table fan	
+P. W. S. K. Bandaranayake		National Development Front	Coconut	Academic at the University of Peradeniya.[63]
+Nuwan Bopage		Socialist People's Forum	Umbrella	Aragalaya activist.[64] Endorsed by the FSP and New Democratic Marxist–Leninist Party.[65]
+Akmeemana Dayarathana Thero		Independent	Blackboard	Former JHU/UPFA MP for Colombo.[66]
+Mahinda Dewage		Socialist Party of Sri Lanka	Balloon	
+Oshala Herath		New Independent Front	Till	Leader of New Independent Front.[67] Former UNP candidate in Colombo.[68]
+Mohamed Illiyas		Independent	Syringe	Former SLMC MP for Jaffna.[69] Presidential candidate in 2010 (endorsed Sarath Fonseka), 2015 and 2019.[70] Died on 22 August 2024.[26]
+Abubakar Mohamed Infaz		Democratic Unity Alliance	Two leaves	
+Sidney Jayarathna		Independent	Jackfruit	Former UNP/UNFGG MP for Polonnaruwa.[71]
+Siritunga Jayasuriya		United Socialist Party	Tri-shaw	Presidential candidate in 2005, 2010, 2015 and 2019.
+Dilith Jayaweera		Communist Party of Sri Lanka	Star	Leader of Mawbima Janatha Pakshaya.[72] Endorsed by the Sarvajana Balaya.[73] Election manifesto launched on 31 August 2024.[74]
+Sarath Keerthirathne		Independent	Football	Former Deputy Minister. Former SLFP/PA MP for Gampaha.[75] Presidential candidate in 2019.
+K. R. Kishan		Arunalu People's Front	Water tap	
+Ananda Kularatne		Independent	Medal	Former Cabinet Minister. Former UNP/UNF MP for Hambantota.[76]
+A. S. P. Liyanage		Sri Lanka Labour Party	Kangaroo	Presidential candidate in 2010, 2015 and 2019.
+Sarath Manamendra		New Sinhala Heritage	Bow and arrow	Presidential candidate in 2010, 2015 (endorsed Mahinda Rajapaksa) and 2019.[77]
+Victor Anthony Perera		Independent	Motorbike	Former SLFP/UPFA MP for Puttalam.[78]
+K. K. Piyadasa		Independent	Calculator	Former UNP/UNFGG MP for Nuwara Eliya.[79]
+M. M. Premasiri		Independent	Pair of spectacles	Former JVP/UPFA MP for Matara.[80]
+Namal Rajapakshe		Samabima Party	Envelope	Not to be confused with SLPP candidate Namal Rajapaksa nor the part of the Rajapaksa family.
+Roshan Ranasinghe		Independent	Cricket bat	Former Cabinet Minister. SLPP/SLPFA MP for Polonnaruwa.[81]
+Janaka Ratnayake		United Lanka People's Party	Cup	Former chairman of the PUCSL.[82]
+Battaramulle Seelarathana Thero		People's Welfare Front	Tractor	Presidential candidate in 2010, 2015 and 2019.
+Lalith de Silva		United National Freedom Front	Comb of plantains	
+Suranjeewa Anoj de Silva		Democratic United National Front	Eagle	
+M. Thilakarajah		Independent	Bird feather	Former NUW/UNFGG MP for Nuwara Eliya.[83]
+Keerthi Wickremeratne		Our People's Power Party	Flag	
+Priyantha Wickremesinghe		Nava Sama Samaja Party	Table	
+Pani Wijesiriwardena		Socialist Equality Party	Pair of scissors	Presidential candidate in 2015 and 2019.
+Ajantha de Zoyza		Ruhunu People's Party	Pineapple	Former SLFP/PA National List MP.[84] Presidential candidate in 2019 (endorsed Sajith Premadasa).[85]
+One of the main reasons for the proliferation of candidates is the low election deposit required to contest – Rs. 50,000 (US$170) for party candidates and Rs. 75,000 (US$250) for independent candidates. These amounts that have remained unchanged since the introduction of presidential elections in 1982.[86][87]
+
+Many of the minor candidates are proxy or dummy candidates put forward by the main contenders to maximise the benefits of candidacy, such as having two agents at every polling station, assigning counting agents, receiving free slots on state television, and gaining general media coverage.[88][89][90]
+
+Withdrawn candidates
+
+The following candidates initially declared their intentions to contest the election but later declined and withdrew from the campaign.
+
+Rejected candidates
+
+The following candidate placed his deposit before the nomination date but failed to appear and submit his nomination papers.
+
+Campaign
+
+Debates
+
+The first presidential debate was scheduled for 7 September 2024, hosted by the March 12 Movement. Four candidates, Sajith Premadasa, Namal Rajapaksa, Dilith Jayaweera, and P. Ariyanethiran, confirmed their participation. The debate took place at theBandaranaike Memorial International Conference Hall(BMICH) and was broadcast live on mainstream television and social media platforms.[97]However, despite initial confirmations, only Dilith Jayaweera attended the debate.[98][99]
+
+Platforms
+
+Ranil Wickremesinghe highlighted his administration’s success in resolving shortages of basic goods. Anura Kumara Dissanayake campaigned on a platform promoting economic freedoms and welfare protections for the working class. Sajith Premadasa vowed to mitigate the impact of theInternational Monetary Fund's restructuring programme on the poor and promised devolved political powers to theTamil minority. Namal Rajapaksa pledged to reduce tax burdens, attributing the recenteconomicandpoliticalcrises to theCOVID-19 pandemic.[14]
+
+Election monitors
+
+Following an invitation from the Election Commission of Sri Lanka, theEuropean External Action Service(EEAS) of theEuropean Union(EU) will deploy an Election Observation Mission (EOM) to observe the Presidential Election scheduled for 21 September.[100][101]
+
+The Election Commission further announced that representatives from 12 countries have been invited to observe the upcoming election. Among those participating are South Asian countries such as India, Nepal, Bangladesh, Pakistan, and the Maldives, as well as aCommonwealthobserver group(COG)[102]and representatives from theAsian Election Observation Network.[103]
+
+Campaign finances
+
+Expenditure cap and regulations
+
+The Election Commission, through a Gazette notification (Gazette Extraordinary – No. 2397/66 on 16 August 2024), set anexpenditure capof Rs. 109 per voter for the 2024 presidential election. As a result, each candidate is now permitted to spend a maximum of Rs. 1.8 billion (Rs. 1,868,298,586).[104]These regulations have been enforced under the Regulation of Election Expenditure Act, No. 3 of 2023, which was certified on 24 January 2023.[105]
+
+Candidate asset declarations
+
+Under the Anti-Corruption Act, election candidates must submit a Declaration of Assets and Liabilities to the Commissioner of Elections with their nomination papers, covering assets and liabilities up to the date the election is announced.[106][107]
+
+After candidates in the Presidential Election submitted their declarations to the Elections Commission on 15 August 2024, the deadline for nomination papers, the Commission to Investigate Allegations of Bribery or Corruption (CIABOC) obtained and published redacted versions on its official website.[108][109]
+
+Opinion polls
+
+Institute for Health Policy
+The Institute for Health Policy (IHP) is an independent research institution.
+
+The following nationwide presidential poll was conducted by the IHP. The poll ranked Sajith Premadasa, Anura Kumara Dissanayake, Ranil Wickremesinghe, and a generic SLPP candidate. All polls conducted before Namal Rajapaksa announced his candidacy on 7 August, including the IHP MRP Presidential Election Update June 2024 released on 1 August, did not account for his entry.[110][111]
+
+Date	Polling firm	Dissanayake
+NPP	Premadasa
+SJB	Wickremesinghe
+Ind	Rajapaksa
+SLPP	Others	Lead	Margin
+of error	Sample
+size
+August 2024	Institute for Health Policy	36%	32%	28%	3%	—	4	±3–7%	19,721
+7 August 2024	Rajapaksa declares his candidacy.
+26 July 2024	Wickremesinghe declares his candidacy.
+July 2024	Institute for Health Policy	37%	36%	23%	4%	—	1	±1–3%	19,015
+June 2024	Institute for Health Policy	30%	43%	20%	7%	—	13	±1–11%	18,213
+May 2024	Institute for Health Policy	39%	38%	15%	7%	—	1	±1–4%	17,751
+April 2024	Institute for Health Policy	39%	39%	13%	9%	—	Tie	±1–4%	17,134
+March 2024	Institute for Health Policy	44%	41%	8%	7%	—	3	±1–4%	16,661
+February 2024	Institute for Health Policy	53%	34%	6%	7%	—	19	±1–4%	16,234
+January 2024	Institute for Health Policy	50%	36%	7%	7%	—	14	±1–4%	15,590
+December 2023	Institute for Health Policy	50%	33%	9%	8%	—	17	±1–4%	14,941
+October 2023	Institute for Health Policy	51%	30%	13%	6%	—	21	±1–4%	13,935
+September 2023	Institute for Health Policy	46%	29%	17%	8%	—	17	±1–3%	13,431
+29 August 2023	Dissanayake declares his candidacy.
+August 2023	Institute for Health Policy	38%	35%	18%	9%	—	3	±1–3%	12,848
+July 2023	Institute for Health Policy	39%	33%	19%	9%	—	6	±1–3%	12,269
+June 2023	Institute for Health Policy	40%	35%	15%	9%	—	5	±1–3%	11,926
+16 May 2023	Premadasa declares his candidacy.
+May 2023	Institute for Health Policy	38%	34%	18%	10%	—	4	±1–4%	11,897
+April 2023	Institute for Health Policy	45%	37%	13%	6%	—	8	±1–4%	11,367
+March 2023	Institute for Health Policy	48%	37%	11%	4%	—	11	±1–5%	10,601
+Numbers.lk
+Numbers.lk is a platform that curates and presents statistics related to Sri Lanka.
+
+Date	Polling firm	Dissanayake
+NPP	Premadasa
+SJB	Wickremesinghe
+Ind	Rajapaksa
+SLPP	Others	Lead	Margin
+of error	Sample
+size
+9–23 August 2024	numbers.lk	43%	22%	27%	3%	4%	16	±3%	3,900
+4–18 April 2024	numbers.lk	46%	22%	18%	—	14%	24	±3.5%	2,048
+
+
+Favourability ratings
+
+In the Institute for Health Policy (IHP) Sri Lanka Opinion Tracker Survey (SLOTS) polling, all major party candidates continued to have negative favourability ratings. The net favourability rating of Anura Kumara Dissanayake increased by 12 points to -10, while the favourability ratings of Sajith Premadasa and incumbent President Ranil Wickremesinghe each decreased by 9 points, to -53 and -77, respectively.[112]
+
+In IHP SLOTS polling, the net favourability rating of Sajith Premadasa increased by 30 points to -30 in March compared to the previous month, while the favourability ratings of Anura Kumara Dissanayake and President Ranil Wickremesinghe remained relatively unchanged at -24 (down 2 points) and -78 (up 1 point), respectively.[113]
+
+In the IHP SLOTS polling conducted in July 2024, the net favourability rating of Anura Kumara Dissanayake rose by 29 points from June, reaching +3. President Ranil Wickremesinghe’s favourability improved by 40 points to -24, surpassing that of Sajith Premadasa. Sajith Premadasa’s favourability rating changed little, shifting from -42 in June to -44 in July.[114]
+
+In the IHP SLOTS polling for August 2024, the net favourability rating of Sajith Premadasa improved to -32, a 10-point increase compared to July. Meanwhile, Anura Kumara Dissanayake and President Ranil Wickremesinghe saw their favourability ratings drop to -21 (a decrease of 16 points) and -33 (a decrease of 4 points), respectively. The favourability rating of Namal Rajapaksa, stood at -89.[115]

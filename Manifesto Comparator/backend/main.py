@@ -49,7 +49,7 @@ def create_vector_db():
     vector_store = FAISS.from_texts(chunks, embeddings)
     return vector_store
 
-async def retrieve_context(query, vector_store, top_k=5):
+async def retrieve_context(query, vector_store, top_k=10):
     results = vector_store.similarity_search(query, k=top_k)
     return "\n".join([doc.page_content for doc in results])
 
