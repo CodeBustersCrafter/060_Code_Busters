@@ -176,6 +176,7 @@ async def generate_response(prompt, openai_client, tavily_client, vector_store, 
         final_prompt = f"""You are an AI assistant tasked with validating and summarizing information about the Sri Lankan Elections 2024. Please review the following aggregated response, fact-check the information, and provide a concise, accurate summary that a user would find informative and easy to understand.
 If the fact-check results are not available, please provide a summary of the information.
 Here's an aggregated response about the Sri Lankan Elections 2024. Please validate this information, correct any inaccuracies, and present a clear, factual summary for the end user:
+If there was any inacurate information don't tell about it in the summary only add the correct information.
 Make sure you Don't add any markdown syntax to the topic of the response(It is a must)
 {combined_response}"""
         
@@ -188,16 +189,15 @@ Make sure you Don't add any markdown syntax to the topic of the response(It is a
 
 def is_greeting_or_simple_query(prompt):
     common_phrases = {
-        "greetings": ["hello", "hi", "hey", "greetings", "morning", "afternoon", "evening"],
-        "queries": ["how are you", "what's up", "how's it going", "what's new"],
-        "farewells": ["goodbye", "bye", "farewell", "see you", "take care"],
-        "thanks": ["thank you", "thanks", "much appreciated", "thanks a lot", "thank you very much"]
+        "greetings": ["hello", "hi", "hey"],
+        "farewell": ["goodbye", "bye", "see you"],
+        "thanking": ["thank you", "thanks", "appreciate it"],
     }
     
     prompt_lower = prompt.lower().strip()
     
     return any(
-        phrase in prompt_lower
+        phrase == prompt_lower
         for category in common_phrases.values()
         for phrase in category
     )
