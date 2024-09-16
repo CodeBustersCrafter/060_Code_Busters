@@ -312,23 +312,183 @@ def manifesto_comparator():
                 progress_placeholder.empty()
                 st.success("**Comparison:**")
                 st.write(response)
+                
+if 'app_mode' not in st.session_state:
+    st.session_state['app_mode'] = "Home"
+
+def set_app_mode(mode):
+    st.session_state['app_mode'] = mode
+
+def home():
+    st.markdown(
+        """
+        <style>
+        .big-font {
+            font-size:30px !important;
+            font-weight: bold;
+            color: #1E88E5;
+        }
+        .card {
+            border-radius: 5px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+
+    st.markdown('<p class="big-font">Welcome to the Election RAG Assistant! 🎉</p>', unsafe_allow_html=True)
+
+    st.write("Explore our powerful tools to stay informed about the upcoming election.")
+
+    col1, col2, col3 = st.columns(3)
+# Add CSS styles for the cards and buttons
+    st.markdown(
+        """
+        <style>
+            .card-container {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 20px;
+            }
+            .card {
+                position: relative;
+                width: 100%;
+                max-width: 300px;
+                height: 300px;
+                background-size: cover;
+                background-position: center;
+                border-radius: 10px;
+                overflow: hidden;
+                transition: transform 0.3s, box-shadow 0.3s;
+                color: white;
+            }
+            .card:hover {
+                transform: scale(1.05);
+                box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+            }
+            .overlay {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.5);
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                padding: 20px;
+                box-sizing: border-box;
+            }
+            .card img {
+                margin-bottom: 10px;
+            }
+            .card-button {
+                margin-top: 15px;
+                width: 100%;
+                display: flex;
+                justify-content: center;
+            }
+            /* Button Styles */
+            .stButton > button {
+                background-color: #1E88E5;
+                border: none;
+                color: white;
+                padding: 10px 20px;
+                text-align: center;
+                text-decoration: none;
+                display: inline-block;
+                font-size: 16px;
+                border-radius: 5px;
+                cursor: pointer;
+                transition: background-color 0.3s;
+            }
+            .stButton > button:hover {
+                background-color: #1565C0;
+            }
+            /* Specific Background Images */
+            .manifesto-card {
+                background-image: url('https://images.unsplash.com/photo-1506784983877-45594efa4cbe?auto=format&fit=crop&w=800&q=80');
+            }
+            .win-card {
+                background-image: url('https://images.unsplash.com/photo-1529333166437-7750a6dd5a70?auto=format&fit=crop&w=800&q=80');
+            }
+            .chat-card {
+                background-image: url('https://images.unsplash.com/photo-1529101091764-c3526daf38fe?auto=format&fit=crop&w=800&q=80');
+            }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+
+    with col1:
+        st.markdown(f'''
+            <div class="card manifesto-card">
+                <div class="overlay">
+                    <img src="https://img.icons8.com/color/96/000000/compare.png" width="50">
+                    <h2 style="color:white">Manifesto Comparator</h2>
+                    <p>Compare the manifestos of different candidates side by side.</p>
+                </div>
+            </div>
+        ''', unsafe_allow_html=True)
+        st.button("Try Manifesto Comparator", on_click=set_app_mode, args=("Manifesto Comparator",))
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    with col2:
+        st.markdown(f'''
+            <div class="card win-card">
+                <div class="overlay">
+                    <img src="https://img.icons8.com/color/96/000000/trophy.png" width="50">
+                    <h2 style="color:white">Win Predictor</h2>
+                    <p>Get insights into potential election outcomes based on current data.</p>
+                </div>
+            </div>
+        ''', unsafe_allow_html=True)
+        st.button("Explore Win Predictor", on_click=set_app_mode, args=("Win Predictor",))
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    with col3:
+        st.markdown(f'''
+        <div class="card chat-card">
+            <div class="overlay">
+                <img src="https://img.icons8.com/color/96/000000/chat.png" width="50">
+                <h2 style="color:white">Election Chat Bot</h2>
+                <p>Have a conversation with our AI-powered chatbot to learn more about the election.</p>
+            </div>
+        </div>
+    ''', unsafe_allow_html=True)
+        st.button("Chat with Election Bot", on_click=set_app_mode, args=("Election Chat Bot",))
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    st.markdown("---")
+    st.write("Stay informed, compare candidates, and make your voice heard in this election!")
 
 def main():
     st.set_page_config(page_title="Election RAG Assistant", layout="wide")
     st.sidebar.title("Navigation")
-    app_mode = st.sidebar.selectbox("Choose Section",
-        ["Manifesto Comparator", "Win Predictor", "Election Chat Bot"]
-    )
+    
+    # Create buttons for each section in the sidebar
+    st.sidebar.button("Home", on_click=set_app_mode, args=("Home",), use_container_width=True)
+    st.sidebar.button("Manifesto Comparator", on_click=set_app_mode, args=("Manifesto Comparator",), use_container_width=True)
+    st.sidebar.button("Win Predictor", on_click=set_app_mode, args=("Win Predictor",), use_container_width=True)
+    st.sidebar.button("Election Chat Bot", on_click=set_app_mode, args=("Election Chat Bot",), use_container_width=True)
 
     st.title("🗳️ Election RAG Assistant")
-    st.write("Navigate through the sidebar to use different features of the application.")
+    st.write("Click on the buttons in the sidebar to use different features of the application.")
 
-    if app_mode == "Manifesto Comparator":
+    if st.session_state["app_mode"] == "Home":
+        home()
+    elif st.session_state["app_mode"] == "Manifesto Comparator":
         manifesto_comparator()
-    elif app_mode == "Win Predictor":
+    elif st.session_state["app_mode"] == "Win Predictor":
         win_predictor()
-    elif app_mode == "Election Chat Bot":
+    elif st.session_state["app_mode"] == "Election Chat Bot":
         election_chatbot()
+    else:
+        home()
 
 if __name__ == "__main__":
     main()
