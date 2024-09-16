@@ -370,139 +370,110 @@ def set_app_mode(mode):
     st.session_state['app_mode'] = mode
 
 def common():
-    # Read data from the JSON file
-    with open('./assets/data.json', 'r') as file:
-        data = json.load(file)
+    # Hardcoded poll data
+    poll1_data = {
+        'Candidate': ['Anura Dissanayake', 'Sajith Premadasa', 'Ranil Wickremesinghe', 'Namal Rajapaksa', 'Other'],
+        'Votes': [36, 32, 28, 3, 1]
+    }
+    
+    poll2_data = {
+        'Candidate': ['Anura Dissanayake', 'Sajith Premadasa', 'Ranil Wickremesinghe', 'Namal Rajapaksa', 'Other'],
+        'Votes': [88, 3.4, 6.2, 0.7, 1.7]
+    }
 
-    # Iterate through each graph in the data and plot accordingly
-    for graph_name, graph_info in data.items():
-        graph_type = graph_info.get('type')
-        graph_data = graph_info.get('data')
+    poll3_data = {
+        'Candidate': ['Anura Dissanayake', 'Sajith Premadasa', 'Ranil Wickremesinghe', 'Namal Rajapaksa', 'Other'],
+        'Votes': [36, 30, 25, 6, 3]
+    }
 
-        st.subheader(graph_name)
+    st.subheader("Sri Lankan Presidential Election Polls")
 
-        if graph_type == "bar":
-            df = pd.DataFrame(graph_data)
-            chart = st.empty()
-            
-            import altair as alt
-            import numpy as np
+    col1, col2 = st.columns(2)
 
-            def animate_bar_chart():
-                chart_placeholder = st.empty()
-                max_percentage = df['Percentage'].max()
-                color_scale = alt.Scale(scheme='category10')
-                
-                for i in range(51):  # Reduced iterations for faster animation
-                    progress = i / 50
-                    eased_progress = 1 - np.cos((progress * np.pi) / 2) ** 3
-                    
-                    temp_df = df.copy()
-                    temp_df['Percentage'] = temp_df['Percentage'] * eased_progress
-                    temp_df['Order'] = range(len(temp_df))
-                    
-                    base = alt.Chart(temp_df).encode(
-                        x=alt.X('Candidate:N', sort='-y', axis=alt.Axis(labelAngle=-45)),
-                        color=alt.Color('Order:O', scale=color_scale, legend=None)
-                    )
-                    
-                    bars = base.mark_bar().encode(
-                        y=alt.Y('Percentage:Q', scale=alt.Scale(domain=[0, max_percentage]))
-                    )
-                    
-                    text = base.mark_text(
-                        align='center',
-                        baseline='bottom',
-                        dy=-5,
-                        fontSize=14
-                    ).encode(
-                        y=alt.Y('Percentage:Q', scale=alt.Scale(domain=[0, max_percentage])),
-                        text=alt.Text('Percentage:Q', format='.1f')
-                    )
-                    
-                    final_chart = (bars + text).properties(
-                        width=600,
-                        height=400,
-                        title=alt.TitleParams(
-                            text='Candidate Percentages',
-                            fontSize=20,
-                            fontWeight='bold'
-                        )
-                    ).configure_view(
-                        strokeWidth=0
-                    ).configure_axis(
-                        grid=False
-                    )
-                    
-                    chart_placeholder.altair_chart(final_chart, use_container_width=True)
-                    time.sleep(0.001)  # Reduced sleep time for faster animation
-            
-            chart_container = st.container()
-            animate_bar_chart()
-        
-        elif graph_type == "line":
-            df = pd.DataFrame(graph_data)
-            chart_placeholder = st.empty()
-            
-            max_percentage = max(df[candidate].max() for candidate in df.columns if candidate != 'Age Group')
-            color_scale = alt.Scale(scheme='category10')
-            df_melted = df.melt(id_vars=['Age Group'], var_name='Candidate', value_name='Percentage')
-            
-            base = alt.Chart(df_melted).encode(
-                x=alt.X('Age Group:N', sort=df['Age Group'].tolist()),
-                color=alt.Color('Candidate:N', scale=color_scale)
+    with col1:
+        fig1 = go.Figure(go.Bar(
+            y=poll1_data['Candidate'],
+            x=poll1_data['Votes'],
+            orientation='h',
+            marker=dict(
+                color=['#FF0000', '#FFFF00', '#00FF00', '#8B0000', '#808080'],
+                line=dict(color='rgba(50, 171, 96, 1.0)', width=1)
             )
-            
-            def animate_line_chart():
-                for i in range(1, len(df) + 1):
-                    temp_df = df_melted[df_melted['Age Group'].isin(df['Age Group'][:i])]
-                    
-                    lines = base.mark_line(interpolate='linear').encode(
-                        y=alt.Y('Percentage:Q', scale=alt.Scale(domain=[0, max_percentage]))
-                    ).transform_filter(
-                        alt.FieldOneOfPredicate(field='Age Group', oneOf=temp_df['Age Group'].unique().tolist())
-                    )
-                    
-                    points = base.mark_circle(size=60).encode(
-                        y=alt.Y('Percentage:Q', scale=alt.Scale(domain=[0, max_percentage]))
-                    ).transform_filter(
-                        alt.FieldOneOfPredicate(field='Age Group', oneOf=temp_df['Age Group'].unique().tolist())
-                    )
-                    
-                    text = base.mark_text(
-                        align='center',
-                        baseline='bottom',
-                        dy=-10,
-                        fontSize=14
-                    ).encode(
-                        y=alt.Y('Percentage:Q', scale=alt.Scale(domain=[0, max_percentage])),
-                        text=alt.Text('Percentage:Q', format='.1f')
-                    ).transform_filter(
-                        alt.FieldOneOfPredicate(field='Age Group', oneOf=temp_df['Age Group'].unique().tolist())
-                    )
-                    
-                    final_chart = (lines + points + text).properties(
-                        width=600,
-                        height=400,
-                        title=alt.TitleParams(
-                            text='Age-wise Support for Candidates',
-                            fontSize=20,
-                            fontWeight='bold'
-                        )
-                    ).configure_view(
-                        strokeWidth=0
-                    ).configure_axis(
-                        grid=False
-                    )
-                    
-                    chart_placeholder.altair_chart(final_chart, use_container_width=True)
-                    time.sleep(0.25)  # Reduced sleep time for faster animation
-            
-            animate_line_chart()
-        else:
-            st.write(f"Unsupported graph type: {graph_type}")
+        ))
+        fig1.update_layout(
+            title='IHP Poll: Voting Intentions (August 2023)',
+            xaxis_title='Votes (%)',
+            yaxis_title='Candidate',
+            height=300,
+            xaxis=dict(range=[0, max(poll1_data['Votes']) + 5])
+        )
+        chart1 = st.plotly_chart(fig1, use_container_width=True)
+        st.markdown("[Source: IHP Press Release](https://www.ihp.lk/press-releases/ak-dissanayake-and-sajith-premadasa-led-august-voting-intent-amongst-all-adults)")
+
+    with col2:
+        fig2 = go.Figure(go.Bar(
+            y=poll2_data['Candidate'],
+            x=poll2_data['Votes'],
+            orientation='h',
+            marker=dict(
+                color=['#FF0000', '#FFFF00', '#00FF00', '#8B0000', '#808080'],
+                line=dict(color='rgba(55, 128, 191, 1.0)', width=1)
+            )
+        ))
+        fig2.update_layout(
+            title='Helakuru Poll: Voting Intentions (September 2023)',
+            xaxis_title='Votes (%)',
+            yaxis_title='Candidate',
+            height=300,
+            xaxis=dict(range=[0, max(poll2_data['Votes']) + 5])
+        )
+        chart2 = st.plotly_chart(fig2, use_container_width=True)
+        st.markdown("[Source: Helakuru Poll Results](https://drive.google.com/file/d/1n5UoAic9Piyq-PlE-fP42qj2pKgQ8ddB/view)")
+
+    col3, col4 = st.columns(2)
+
+    with col3:
+        fig3 = go.Figure(go.Bar(
+            y=poll3_data['Candidate'],
+            x=poll3_data['Votes'],
+            orientation='h',
+            marker=dict(
+                color=['#FF0000', '#FFFF00', '#00FF00', '#8B0000', '#808080'],
+                line=dict(color='rgba(128, 0, 128, 1.0)', width=1)
+            )
+        ))
+        fig3.update_layout(
+            title='Numbers.lk Poll: Voting Intentions (August 2023)',
+            xaxis_title='Votes (%)',
+            yaxis_title='Candidate',
+            height=300,
+            xaxis=dict(range=[0, max(poll3_data['Votes']) + 5])
+        )
+        chart3 = st.plotly_chart(fig3, use_container_width=True)
+        st.markdown("[Source: Numbers.lk Poll Results](https://numbers.lk/analysis/presidential-election-2024-voter-perception-analysis)")
+
+    with col4:
+        st.markdown("""
+            <div style="background-color: #f0f0f0; border-radius: 10px; padding: 15px; border: 1px solid #cccccc;">
+                <h3 style="color: #333333;">Disclaimer</h3>
+                <p style="color: #555555;">These charts represent poll data from various sources and time periods. The accuracy and methodology of each poll may vary. Please interpret the results with caution and refer to the original sources for more detailed information.</p>
+                <p style="color: #555555;">Note: Poll results may not be indicative of final election outcomes.</p>
+            </div>
+        """, unsafe_allow_html=True)
+
+    # Animate the charts
+    for i in range(1, 6):  # Reduced number of steps for faster animation
+        time.sleep(0.05)  # Reduced delay for faster animation
+        fig1.update_traces(x=[v * i / 5 for v in poll1_data['Votes']])
+        chart1.plotly_chart(fig1, use_container_width=True)
+
+        fig2.update_traces(x=[v * i / 5 for v in poll2_data['Votes']])
+        chart2.plotly_chart(fig2, use_container_width=True)
+
+        fig3.update_traces(x=[v * i / 5 for v in poll3_data['Votes']])
+        chart3.plotly_chart(fig3, use_container_width=True)
+
 def home():
-    common()
     st.markdown(
         """
         <style>
@@ -910,17 +881,88 @@ def past_elections():
         st.markdown("<hr style='margin: 40px 0; border: 0; border-top: 2px solid #e0e0e0;'>", unsafe_allow_html=True)
 
 def main():
-    st.set_page_config(page_title="Election RAG Assistant", layout="wide")
-    st.sidebar.title("Navigation")
+    st.set_page_config(page_title="Sri Lankan Election Insights", layout="wide")
     
-    # Create buttons for each section in the sidebar
-    st.sidebar.button("Home", on_click=set_app_mode, args=("Home",), use_container_width=True)
-    st.sidebar.button("Manifesto Comparator", on_click=set_app_mode, args=("Manifesto Comparator",), use_container_width=True)
-    st.sidebar.button("Win Predictor", on_click=set_app_mode, args=("Win Predictor",), use_container_width=True)
-    st.sidebar.button("Election Chat Bot", on_click=set_app_mode, args=("Election Chat Bot",), use_container_width=True)
+    today = datetime.datetime.now()
+    election_date = datetime.datetime(2024, 9, 21, 8, 0, 0)
+    time_until_election = election_date - today
+    days_until_election = time_until_election.days
+    hours_until_election = time_until_election.seconds // 3600
+    minutes_until_election = (time_until_election.seconds % 3600) // 60
+    
+    # Create a more professional looking sidebar
+    with st.sidebar:
+        st.title("Election Dashboard")
+        st.markdown("---")
+        if st.button("🏠 Home", use_container_width=True):
+            set_app_mode("Home")
+        if st.button("📊 Manifesto Comparator", use_container_width=True):
+            set_app_mode("Manifesto Comparator")
+        if st.button("🏆 Win Predictor", use_container_width=True):
+            set_app_mode("Win Predictor")
+        if st.button("💬 Election Chat Bot", use_container_width=True):
+            set_app_mode("Election Chat Bot")
+        if st.button("🗳️ Past Elections", use_container_width=True):
+            set_app_mode("Past Elections")
+        st.markdown("---")
+        st.info("Select a feature from above to get started.")
 
-    st.title("🗳️ Election RAG Assistant")
-    st.write("Click on the buttons in the sidebar to use different features of the application.")
+    col1, col2 = st.columns([3, 1])
+    with col1:
+        st.title("🗳️ Sri Lankan Election Insights")
+    with col2:
+        st.markdown(f"""
+        <style>
+        @keyframes pulse {{
+            0% {{ transform: scale(1); }}
+            50% {{ transform: scale(1.05); }}
+            100% {{ transform: scale(1); }}
+        }}
+        .countdown-container {{
+            background-color: #000000;
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            animation: pulse 2s infinite;
+            border: 2px solid #1E88E5;
+        }}
+        .countdown-title {{
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }}
+        .countdown-number {{
+            font-size: 28px;
+            font-weight: bold;
+            margin: 5px 0;
+        }}
+        .countdown-label {{
+            font-size: 14px;
+            text-transform: uppercase;
+        }}
+        .countdown-unit {{
+            display: inline-block;
+            margin: 0 10px;
+        }}
+        </style>
+        <div class='countdown-container'>
+            <div class='countdown-title'>Election Countdown</div>
+            <div class='countdown-unit'>
+                <div class='countdown-number'>{days_until_election}</div>
+                <div class='countdown-label'>Days</div>
+            </div>
+            <div class='countdown-unit'>
+                <div class='countdown-number'>{hours_until_election:02d}</div>
+                <div class='countdown-label'>Hours</div>
+            </div>
+            <div class='countdown-unit'>
+                <div class='countdown-number'>{minutes_until_election:02d}</div>
+                <div class='countdown-label'>Minutes</div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
 
     if st.session_state["app_mode"] == "Home":
         home()
