@@ -1,9 +1,10 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from main import initialize_clients, generate_response, create_vector_db, create_candidate_vector_stores, compare_candidates
 import os
 import logging
+import requests
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -40,9 +41,37 @@ except Exception as e:
 
 class Query(BaseModel):
     prompt: str
+    language: str = Field(default="English", description="Language of the prompt and response")
 
 class ComparisonQuery(BaseModel):
     candidates: list[str]
+
+AZURE_TRANSLATE_ENDPOINT = os.getenv("AZURE_TRANSLATE_ENDPOINT")
+AZURE_TRANSLATE_KEY = os.getenv("AZURE_TRANSLATE_KEY")
+
+def translate_text(text, from_lang, to_lang):
+    headers = {
+        'Ocp-Apim-Subscription-Key': AZURE_TRANSLATE_KEY,
+        'Ocp-Apim-Subscription-Region': 'southeastasia', 
+        'Content-type': 'application/json'
+    }
+    params = {
+        'api-version': '3.0',
+        'from': from_lang,
+        'to': to_lang
+    }
+    body = [
+        {'Text': text}
+    ]
+    response = requests.post(
+        AZURE_TRANSLATE_ENDPOINT,
+        params=params,
+        headers=headers,
+        json=body
+    )
+    response.raise_for_status()
+    return response.json()[0]['translations'][0]['text']
+
 
 @app.get("/")
 async def root():
@@ -51,16 +80,39 @@ async def root():
 
 @app.post("/generate")
 async def generate(query: Query):
-    logger.info(f"Received prompt: {query.prompt}")
+    logger.info(f"Received prompt: {query.prompt} in language: {query.language}")
     if vector_store is None:
         logger.error("Vector store is not initialized.")
         return {"error": "Vector store is not initialized."}
     try:
-        response = await generate_response(query.prompt, openai_client,tavily_client, vector_store,memory,1)
-        logger.info(f"Generated response: {response}")
-        return {"response": response}
+        # Translate prompt to English if necessary
+        if query.language.lower() == "english":
+            translated_prompt = query.prompt
+        elif query.language.lower() == "sinhala":
+            translated_prompt = translate_text(query.prompt, "si", "en")
+            print(translated_prompt)
+        elif query.language.lower() == "tamil":
+            translated_prompt = translate_text(query.prompt, "ta", "en")
+        else:
+            return {"error": "Unsupported language selected."}
+
+        response = await generate_response(translated_prompt, openai_client, tavily_client, vector_store, memory, 1)
+
+        # Translate response back to the selected language if necessary
+        if query.language.lower() == "english":
+            translated_response = response
+        elif query.language.lower() == "sinhala":
+            print(response)
+            translated_response = translate_text(response, "en", "si")
+        elif query.language.lower() == "tamil":
+            translated_response = translate_text(response, "en", "ta")
+        else:
+            translated_response = response  # Fallback
+
+        logger.info(f"Generated response: {translated_response}")
+        return {"response": translated_response}
     except Exception as e:
-        logger.error(f"Error generating response: {e}")
+        logger.error(f"Error generating response: {e}", exc_info=True)
         return {"error": "Failed to generate response."}
 
 @app.post("/compare")

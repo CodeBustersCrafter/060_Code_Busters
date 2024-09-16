@@ -14,12 +14,13 @@ MANIFESTO_API_URL = os.getenv("COMPARATOR_URL", "http://127.0.0.1:8000/compare")
 WIN_PREDICTOR_API_URL = os.getenv("WIN_PREDICTOR_URL", "http://127.0.0.1:8000/win_predictor")
 CHATBOT_API_URL = os.getenv("FASTAPI_URL", "http://127.0.0.1:8000/generate")
 
-def generate_manifesto_response(prompt):
+def generate_manifesto_response(prompt, language):
     headers = {
         "Content-Type": "application/json"
     }
     payload = {
-        "prompt": prompt
+        "prompt": prompt,
+        "language": language
     }
     try:
         response = requests.post(CHATBOT_API_URL, headers=headers, data=json.dumps(payload))
@@ -29,7 +30,7 @@ def generate_manifesto_response(prompt):
             return f"Error {response.status_code}: {response.text}"
     except requests.exceptions.RequestException as e:
         return f"An error occurred: {e}"
-
+    
 def fetch_win_predictor_data():
     try:
         response = requests.get(WIN_PREDICTOR_API_URL)
@@ -60,31 +61,40 @@ def compare_manifestos(candidates):
 
 def election_chatbot():
     st.header("🤖 Election Chat Bot")
+    
+    # Add language selection
+    language = st.selectbox(
+        "Select Language",
+        options=["English", "Sinhala", "Tamil"],
+        index=0,
+        help="Choose the language for interacting with the chatbot."
+    )
+    
     if 'messages' not in st.session_state:
         st.session_state['messages'] = []
 
     def send_message():
         user_input = st.session_state["user_input"]
         if user_input:
-            st.session_state.messages.append({"type": "user", "text": user_input})
+            st.session_state.messages.append({"type": "user", "text": user_input, "language": language})
             with st.spinner("Generating response..."):
                 progress_placeholder = st.empty()
                 progress_bar = progress_placeholder.progress(0)
                 for i in range(100):
                     time.sleep(0.01)
                     progress_bar.progress(i + 1)
-                response = generate_manifesto_response(user_input)
+                response = generate_manifesto_response(user_input, language)
                 progress_placeholder.empty()
-            st.session_state.messages.append({"type": "bot", "text": response})
+            st.session_state.messages.append({"type": "bot", "text": response, "language": language})
             st.session_state["user_input"] = ""
 
     st.text_input("You:", key="user_input", on_change=send_message)
 
     for msg in st.session_state.messages:
         if msg["type"] == "user":
-            st.markdown(f"**You:** {msg['text']}")
+            st.markdown(f"**You:** {msg['text']} ({msg['language']})")
         else:
-            st.markdown(f"**Chat Bot:** {msg['text']}")
+            st.markdown(f"**Chat Bot:** {msg['text']} ({msg['language']})")
 
 # Global predicted data
 data = None
