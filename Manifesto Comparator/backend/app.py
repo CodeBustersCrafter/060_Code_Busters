@@ -155,44 +155,44 @@ async def compare(query: ComparisonQuery):
         logger.error(f"Error generating comparison: {e}", exc_info=True)
         return {"error": f"Failed to generate comparison: {str(e)}"}
 
-from win_predictor import extract_data_from_urls, analyze_content, initialize_clients_2
+from win_predictor import extract_data_from_urls, analyze_content, initialize_clients_2, load_polling_data
 
 @app.get("/win_predictor")
 async def win_predictor():
-    openai_client,tavily_client = initialize_clients_2()
+    openai_client, tavily_client = initialize_clients_2()
     logger.info("Win predictor endpoint accessed.")
     try:
-        urls = [
-            "https://numbers.lk/analysis/akd-maintains-lead-in-numbers-lk-s-2nd-pre-election-poll-ranil-surges-to-second-place",
-            "https://www.ihp.lk/press-releases/ak-dissanayake-and-sajith-premadasa-led-august-voting-intent-amongst-all-adults"
-        ]
-        extracted_content = extract_data_from_urls(urls)
-        analysis = await analyze_content(extracted_content, openai_client, tavily_client)
+        polling_data = load_polling_data("polling_data.json")
+        if not polling_data:
+            logger.error("Failed to load polling data.")
+            return {"error": "Failed to load polling data."}
+
+        # Generate a unique filename for the win predictor analysis
+        filename = os.path.join(os.path.dirname(__file__), "win_predictor_analysis.json")
+        
+        # Check if the analysis already exists
+        if os.path.exists(filename):
+            with open(filename, 'r') as file:
+                analysis = json.load(file)
+            logger.info(f"Retrieved existing win predictor analysis from {filename}")
+        else:
+            urls = [
+                "https://numbers.lk/analysis/akd-maintains-lead-in-numbers-lk-s-2nd-pre-election-poll-ranil-surges-to-second-place",
+                "https://www.ihp.lk/press-releases/ak-dissanayake-and-sajith-premadasa-led-august-voting-intent-amongst-all-adults"
+            ]
+            web_scraped_content = extract_data_from_urls(urls)
+            analysis = await analyze_content(polling_data, web_scraped_content, openai_client, tavily_client)
+            
+            # Save the new analysis
+            with open(filename, 'w') as file:
+                json.dump(analysis, file)
+            logger.info(f"Generated new win predictor analysis and saved to {filename}")
+        
         logger.info(f"Generated win predictor analysis: {analysis}")
         return {"data": analysis}
     except Exception as e:
         logger.error(f"Error in win predictor: {e}")
         return {"error": "Failed to generate win predictor analysis."}
-
-# from overall_predictor import extract_data_overeall_from_urls, analyze_overall_content, initialize_clients_3
-
-# @app.get("/overall_predictor")
-# async def win_predictor():
-#     openai_client,tavily_client = initialize_clients_3()
-#     logger.info("Overall predictor endpoint accessed.")
-#     try:
-#         urls = [
-#             "https://numbers.lk/analysis/akd-maintains-lead-in-numbers-lk-s-2nd-pre-election-poll-ranil-surges-to-second-place",
-#             "https://www.ihp.lk/press-releases/ak-dissanayake-and-sajith-premadasa-led-august-voting-intent-amongst-all-adults"
-#         ]
-#         extracted_content = extract_data_overeall_from_urls(urls)
-#         analysis = await analyze_overall_content(extracted_content, openai_client, tavily_client)
-#         logger.info(f"Generated overall predictor analysis: {analysis}")
-#         return {"data": analysis}
-#     except Exception as e:
-#         logger.error(f"Error in win predictor: {e}")
-#         return {"error": "Failed to generate overrall predictor analysis."}
-
 
 if __name__ == "__main__":
     import uvicorn

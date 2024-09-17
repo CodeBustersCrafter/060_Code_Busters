@@ -153,9 +153,6 @@ def win_predictor():
             try:
                 # Convert the string data to JSON
                 data = json.loads(data)
-                
-                # Now json_data is a Python dictionary
-                st.success("Data successfully loaded and parsed.")
             except json.JSONDecodeError as e:
                 st.error(f"Error parsing JSON data: {e}")
                 return
@@ -168,7 +165,17 @@ def win_predictor():
                     st.subheader(key)
                     df = pd.DataFrame(value["data"])
                     df = df.set_index(df.columns[0])
-                    st.line_chart(df)
+                    # Define a custom month order
+                    month_order = ['March', 'April', 'May', 'June', 'July', 'August']
+                    # Sort the DataFrame by the custom month order
+                    df = df.reindex(month_order)
+                    # Create a custom color palette
+                    colors = ['#FF0000', '#00FF00', '#0000FF', '#FFA500', '#800080']  # Red, Green, Blue, Orange, Purple
+                    fig = go.Figure()
+                    for i, column in enumerate(df.columns):
+                        fig.add_trace(go.Scatter(x=df.index, y=df[column], mode='lines+markers', name=column, line=dict(color=colors[i % len(colors)])))
+                    fig.update_layout(title=key, xaxis_title='Month', yaxis_title='Percentage', legend_title='Candidates')
+                    st.plotly_chart(fig)
                 elif value['type'] == "pie":
                     st.subheader(key)
                     df = pd.DataFrame(value["data"])

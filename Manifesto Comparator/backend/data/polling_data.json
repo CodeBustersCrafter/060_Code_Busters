@@ -1,0 +1,24 @@
+[
+    {
+      "organization": "IHP Poll",
+      "date": "2023-08-15",
+      "results": {
+        "Anura Dissanayake": 36.0,
+        "Sajith Premadasa": 32.0,
+        "Ranil Wickremesinghe": 28.0,
+        "Namal Rajapaksa": 3.0,
+        "Other": 1.0
+      }
+    },
+    {
+      "organization": "Numbers.lk Poll",
+      "date": "2023-08-20",
+      "results": {
+        "Anura Dissanayake": 36.0,
+        "Sajith Premadasa": 30.0,
+        "Ranil Wickremesinghe": 25.0,
+        "Namal Rajapaksa": 6.0,
+        "Other": 3.0
+      }
+    }
+  ]
