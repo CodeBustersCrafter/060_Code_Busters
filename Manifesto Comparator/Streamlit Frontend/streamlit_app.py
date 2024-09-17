@@ -59,6 +59,7 @@ def compare_manifestos(candidates):
             return f"Error {response.status_code}: {response.text}"
     except requests.exceptions.RequestException as e:
         return f"An error occurred: {e}"
+
 def election_chatbot():
     st.header("🤖 Election Chat Bot")
     
@@ -370,6 +371,57 @@ def set_app_mode(mode):
     st.session_state['app_mode'] = mode
 
 def common():
+    # Add two new buttons with a unique style before the poll data
+    col1, col2 = st.columns(2)
+    with col1:
+        st.markdown(
+            """
+            <style>
+            .custom-button {
+                background-color: #4CAF50;
+                border: none;
+                color: white;
+                padding: 15px 32px;
+                text-align: center;
+                text-decoration: none;
+                display: inline-block;
+                font-size: 16px;
+                margin: 4px 2px;
+                cursor: pointer;
+                border-radius: 12px;
+            }
+            </style>
+            <a href="https://eservices.elections.gov.lk/pages/myVoterRegistrationElection.aspx" target="_blank">
+                <button class="custom-button">Check Your Eligibility</button>
+            </a>
+            """, 
+            unsafe_allow_html=True
+        )
+    with col2:
+        st.markdown(
+            """
+            <style>
+            .custom-button {
+                background-color: #008CBA;
+                border: none;
+                color: white;
+                padding: 15px 32px;
+                text-align: center;
+                text-decoration: none;
+                display: inline-block;
+                font-size: 16px;
+                margin: 4px 2px;
+                cursor: pointer;
+                border-radius: 12px;
+            }
+            </style>
+            <a href="https://eservices.elections.gov.lk/pages/ec_ct_KYC_PRE_RP.aspx?ref=MTE%3d" target="_blank">
+                <button class="custom-button">Know Your Candidates</button>
+            </a>
+            """, 
+            unsafe_allow_html=True
+        )
+
     # Hardcoded poll data
     poll1_data = {
         'Candidate': ['Anura Dissanayake', 'Sajith Premadasa', 'Ranil Wickremesinghe', 'Namal Rajapaksa', 'Other'],
@@ -483,10 +535,15 @@ def home():
             color: #1E88E5;
         }
         .card {
-            border-radius: 5px;
+            border-radius: 10px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             padding: 20px;
             margin-bottom: 20px;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
         }
         </style>
         """,
@@ -499,11 +556,6 @@ def home():
             @keyframes fadeIn {
                 from { opacity: 0; transform: translateY(20px); }
                 to { opacity: 1; transform: translateY(0); }
-            }
-            @keyframes pulse {
-                0% { transform: scale(1); }
-                50% { transform: scale(1.05); }
-                100% { transform: scale(1); }
             }
             .card-container {
                 display: flex;
@@ -518,16 +570,10 @@ def home():
                 height: 300px;
                 border-radius: 10px;
                 overflow: hidden;
-                transition: transform 0.3s, box-shadow 0.3s;
                 color: white;
                 padding: 20px;
                 box-sizing: border-box;
-                animation: fadeIn 0.5s ease-out, pulse 2s infinite;
-            }
-            .card:hover {
-                transform: scale(1.05);
-                box-shadow: 0 8px 16px rgba(0,0,0,0.3);
-                animation: none;
+                animation: fadeIn 0.5s ease-out;
             }
             .card-content {
                 height: 100%;
@@ -544,53 +590,11 @@ def home():
             .card:hover img {
                 transform: rotate(360deg);
             }
-            .card-button {
-                margin-top: 15px;
-                width: 100%;
+            .card-header {
                 display: flex;
-                justify-content: center;
-            }
-            /* Button Styles */
-            .stButton > button {
-                background-color: rgba(128, 128, 128, 0.2);
-                border: 2px solid #808080;
-                color: #808080;
-                padding: 10px 20px;
-                text-align: center;
-                text-decoration: none;
-                display: inline-block;
-                font-size: 16px;
-                border-radius: 5px;
-                cursor: pointer;
-                transition: all 0.3s;
-                position: relative;
-                overflow: hidden;
-            }
-            .stButton > button:hover {
-                background-color: rgba(30, 136, 229, 0.3);
-                border-color: #1E88E5;
-                color: #1E88E5;
-            }
-            .stButton > button::after {
-                content: '';
-                position: absolute;
-                top: 50%;
-                left: 50%;
-                width: 5px;
-                height: 5px;
-                background: rgba(30, 136, 229, 0.5);
-                opacity: 0;
-                border-radius: 100%;
-                transform: scale(1, 1) translate(-50%);
-                transform-origin: 50% 50%;
-            }
-            .stButton > button:hover::after {
-                animation: ripple 1s ease-out;
-            }
-            @keyframes ripple {
-                0% { transform: scale(0, 0); opacity: 1; }
-                20% { transform: scale(25, 25); opacity: 1; }
-                100% { opacity: 0; transform: scale(40, 40); }
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 15px;
             }
             /* Specific Card Styles */
             .manifesto-card {
@@ -610,59 +614,62 @@ def home():
         unsafe_allow_html=True
     )
 
+    st.markdown("<h2 class='big-font'>Welcome to Sri Lankan Election Insights</h2>", unsafe_allow_html=True)
+    st.write("Explore our comprehensive tools to stay informed about the upcoming Sri Lankan Presidential Election.")
+
     col1, col2, col3, col4 = st.columns(4)
 
     with col1:
-        st.markdown(f'''
+        st.markdown('''
             <div class="card manifesto-card">
-                <div class="overlay">
-                    <img src="https://img.icons8.com/color/96/000000/compare.png" width="50">
-                    <h2 style="color:white">Manifesto Comparator</h2>
+                <div class="card-content">
+                    <div class="card-header">
+                        <img src="https://img.icons8.com/color/96/000000/compare.png" width="50">
+                    </div>
+                    <h3>Manifesto Comparator</h3>
                     <p>Compare the manifestos of different candidates side by side.</p>
                 </div>
             </div>
         ''', unsafe_allow_html=True)
-        st.button("Try Manifesto Comparator", on_click=set_app_mode, args=("Manifesto Comparator",))
-        st.markdown('</div>', unsafe_allow_html=True)
 
     with col2:
-        st.markdown(f'''
+        st.markdown('''
             <div class="card win-card">
-                <div class="overlay">
-                    <img src="https://img.icons8.com/color/96/000000/trophy.png" width="50">
-                    <h2 style="color:white">Win Predictor</h2>
+                <div class="card-content">
+                    <div class="card-header">
+                        <img src="https://img.icons8.com/color/96/000000/trophy.png" width="50">
+                    </div>
+                    <h3>Win Predictor</h3>
                     <p>Get insights into potential election outcomes based on current data.</p>
                 </div>
             </div>
         ''', unsafe_allow_html=True)
-        st.button("Explore Win Predictor", on_click=set_app_mode, args=("Win Predictor",))
-        st.markdown('</div>', unsafe_allow_html=True)
 
     with col3:
-        st.markdown(f'''
+        st.markdown('''
         <div class="card chat-card">
-            <div class="overlay">
-                <img src="https://img.icons8.com/color/96/000000/chat.png" width="50">
-                <h2 style="color:white">Election Chat Bot</h2>
+            <div class="card-content">
+                <div class="card-header">
+                    <img src="https://img.icons8.com/color/96/000000/chat.png" width="50">
+                </div>
+                <h3>Election Chat Bot</h3>
                 <p>Have a conversation with our AI-powered chatbot to learn more about the election.</p>
             </div>
         </div>
     ''', unsafe_allow_html=True)
-        st.button("Chat with Election Bot", on_click=set_app_mode, args=("Election Chat Bot",))
-        st.markdown('</div>', unsafe_allow_html=True)
 
     with col4:
-        st.markdown(f'''
+        st.markdown('''
         <div class="card past-elections-card">
-            <div class="overlay">
-                <img src="https://img.icons8.com/color/96/000000/historical.png" width="50">
-                <h2 style="color:white">Past Elections</h2>
+            <div class="card-content">
+                <div class="card-header">
+                    <img src="https://img.icons8.com/color/96/000000/historical.png" width="50">
+                </div>
+                <h3>Past Elections</h3>
                 <p>Explore the results and details of past Sri Lankan elections.</p>
             </div>
         </div>
     ''', unsafe_allow_html=True)
-        st.button("View Past Elections", on_click=set_app_mode, args=("Past Elections",))
-        st.markdown('</div>', unsafe_allow_html=True)
 
     # Call the common function here to display the poll results
     common()
