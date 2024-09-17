@@ -98,21 +98,22 @@ def aggregate_responses(response1, response2, is_consistent):
         aggregated = response1 if len(response1) > len(response2) else response2
     return aggregated
 
-async def fact_check_response(response, tavily_client):
+async def fact_check_response(response,prompt, tavily_client):
     fact_check_prompt = f"Fact-check the following statement: {response}"
     try:
         fact_check_results = tavily_client.search(query=fact_check_prompt)
         return fact_check_results
     except Exception as e:
-        print(f"Error during fact-checking: {e}")
-        return "No additional context available."
+        updated_fact_check_prompt = f"Fact-check on the following statement related to the Sri Lankan Elections 2024: '{prompt}'."
+        fact_check_results = tavily_client.search(query=updated_fact_check_prompt)
+        return fact_check_results
 
-async def combine_responses(response1, response2, tavily_client):
+async def combine_responses(response1, response2, tavily_client,prompt):
     is_consistent = check_consistency(response1, response2)
     
     aggregated_response = aggregate_responses(response1, response2, is_consistent)
     
-    fact_check_results = await fact_check_response(aggregated_response, tavily_client)
+    fact_check_results = await fact_check_response(aggregated_response,prompt, tavily_client)
     
     combine_responses = f"aggregated_response:\n{aggregated_response}\n\fact_check_results: {fact_check_results}\n\n"
     
@@ -121,17 +122,24 @@ async def combine_responses(response1, response2, tavily_client):
 async def generate_response(prompt, openai_client, tavily_client, vector_store, memory, type, gemini_model):
 
     async def get_openai_response(prompt):
-        completion = await openai_client.chat.completions.create(
-            model="meta/llama-3.1-405b-instruct",
-            messages=[
-                {"role": "system", "content": "You are a helpful assistant that provides information about Sri Lankan Elections 2024."},
-                {"role": "user", "content": prompt}
-            ],
-            temperature=0.5,
-            top_p=0.7,
-            max_tokens=2048
-        )
-        return completion.choices[0].message.content
+        try:
+            completion = await openai_client.chat.completions.create(
+                model="meta/llama-3.1-405b-instruct",
+                messages=[
+                    {"role": "system", "content": "You are a helpful assistant that provides information about Sri Lankan Elections 2024."},
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0.5,
+                top_p=0.7,
+                max_tokens=2048
+            )
+            return completion.choices[0].message.content
+        except AttributeError:
+            # Handle the case where the response is a string instead of an object
+            return completion
+        except Exception as e:
+            print(f"Error in get_openai_response: {e}")
+            return "An error occurred while processing your request. Try again later."
     
     async def get_gemini_response(prompt):
         loop = asyncio.get_event_loop()
@@ -172,7 +180,7 @@ async def generate_response(prompt, openai_client, tavily_client, vector_store, 
             gemini_response_task
         )
 
-        combined_response = await combine_responses(openai_response, gemini_response, tavily_client)
+        combined_response = await combine_responses(openai_response, gemini_response, tavily_client,prompt)
         final_prompt = f"""You are an AI assistant tasked with validating and summarizing information about the Sri Lankan Elections 2024. Please review the following aggregated response, fact-check the information, and provide a concise, accurate summary that a user would find informative and easy to understand.
 If the fact-check results are not available, please provide a summary of the information.
 Here's an aggregated response about the Sri Lankan Elections 2024. Please validate this information, correct any inaccuracies, and present a clear, factual summary for the end user:
@@ -205,11 +213,11 @@ def is_greeting_or_simple_query(prompt):
 def create_candidate_vector_stores():
     script_dir = os.path.dirname(os.path.realpath(__file__))
     manifests = {
-        "Ranil": "ranil_manifest.txt",
-        "Sajith": "sajith_manifest.txt",
-        "Anura": "anura_manifest.txt",
-        "Namal": "namal_manifest.txt",
-        "Dilith": "dilith_manifest.txt"
+        "Ranil Wickremesinghe": "ranil_manifest.txt",
+        "Sajith Premadasa": "sajith_manifest.txt",
+        "Anura Kumara Dissanayake": "anura_manifest.txt",
+        "Namal Rajapaksa": "namal_manifest.txt",
+        "Dilith Jayaweera": "dilith_manifest.txt"
     }
     
     vector_stores = {}
@@ -265,7 +273,7 @@ async def compare_candidates(candidates, openai_client, tavily_client, candidate
         ]
         
         async def get_section_context(section):
-            return await retrieve_context(f"{section} {prompt}", candidate_vector_stores[candidate], top_k=5)
+            return await retrieve_context(f"{section} {prompt}", candidate_vector_stores[candidate], top_k=10)
         
         section_contexts = await asyncio.gather(*[get_section_context(section) for section in sections])
         context = "\n".join(f"{section}:\n{context}\n" for section, context in zip(sections, section_contexts))
@@ -287,7 +295,7 @@ async def compare_candidates(candidates, openai_client, tavily_client, candidate
             messages=[{"role": "user", "content": full_prompt}],
             temperature=0.3,
             top_p=0.4,
-            max_tokens=2048
+            max_tokens=4096
         )
         return completion.choices[0].message.content
 
@@ -349,13 +357,13 @@ if __name__ == "__main__":
             return
         prompt = "When is the next election in Sri Lanka?"
         response = await generate_response(prompt, openai_client, tavily_client, vector_store, memory, 1, gemini_model)
-        print(response)
+        # print(response)
         
         candidate_vector_stores = create_candidate_vector_stores()
         candidates = ["Sajith", "Ranil", "Anura", "Namal", "Dilith"]
         comparison = await compare_candidates(candidates, openai_client, tavily_client, candidate_vector_stores)
         print("\nComparison of candidates' manifestos:")
-        print(comparison)
+        # print(comparison)
         
         # Debug information
         print("\nDebug Information:")
