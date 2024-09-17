@@ -430,12 +430,12 @@ def common():
     
     poll2_data = {
         'Candidate': ['Anura Dissanayake', 'Sajith Premadasa', 'Ranil Wickremesinghe', 'Namal Rajapaksa', 'Other'],
-        'Votes': [88, 3.4, 6.2, 0.7, 1.7]
+        'Votes': [36, 30, 25, 6, 3]
     }
 
     poll3_data = {
         'Candidate': ['Anura Dissanayake', 'Sajith Premadasa', 'Ranil Wickremesinghe', 'Namal Rajapaksa', 'Other'],
-        'Votes': [36, 30, 25, 6, 3]
+        'Votes': [88, 3.4, 6.2, 0.7, 1.7]
     }
 
     st.subheader("Sri Lankan Presidential Election Polls")
@@ -469,18 +469,18 @@ def common():
             orientation='h',
             marker=dict(
                 color=['#FF0000', '#FFFF00', '#00FF00', '#8B0000', '#808080'],
-                line=dict(color='rgba(55, 128, 191, 1.0)', width=1)
+                line=dict(color='rgba(128, 0, 128, 1.0)', width=1)
             )
         ))
         fig2.update_layout(
-            title='Helakuru Poll: Voting Intentions (September 2023)',
+            title='Numbers.lk Poll: Voting Intentions (August 2023)',
             xaxis_title='Votes (%)',
             yaxis_title='Candidate',
             height=300,
             xaxis=dict(range=[0, max(poll2_data['Votes']) + 5])
         )
         chart2 = st.plotly_chart(fig2, use_container_width=True)
-        st.markdown("[Source: Helakuru Poll Results](https://drive.google.com/file/d/1n5UoAic9Piyq-PlE-fP42qj2pKgQ8ddB/view)")
+        st.markdown("[Source: Numbers.lk Release](https://numbers.lk/analysis/presidential-election-2024-voter-perception-analysis)")
 
     col3, col4 = st.columns(2)
 
@@ -491,18 +491,18 @@ def common():
             orientation='h',
             marker=dict(
                 color=['#FF0000', '#FFFF00', '#00FF00', '#8B0000', '#808080'],
-                line=dict(color='rgba(128, 0, 128, 1.0)', width=1)
+                line=dict(color='rgba(55, 128, 191, 1.0)', width=1)
             )
         ))
         fig3.update_layout(
-            title='Numbers.lk Poll: Voting Intentions (August 2023)',
+            title='Helakuru Poll: Voting Intentions (September 2023)',
             xaxis_title='Votes (%)',
             yaxis_title='Candidate',
             height=300,
             xaxis=dict(range=[0, max(poll3_data['Votes']) + 5])
         )
         chart3 = st.plotly_chart(fig3, use_container_width=True)
-        st.markdown("[Source: Numbers.lk Poll Results](https://numbers.lk/analysis/presidential-election-2024-voter-perception-analysis)")
+        st.markdown("[Source: Helakuru Poll Results](https://drive.google.com/file/d/1n5UoAic9Piyq-PlE-fP42qj2pKgQ8ddB/view)")
 
     with col4:
         st.markdown("""
