@@ -5,6 +5,7 @@ from main import initialize_clients, generate_response, create_vector_db, create
 import os
 import logging
 import requests
+import json
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -129,7 +130,25 @@ async def compare(query: ComparisonQuery):
             logger.error("One or more candidate vector stores are None.")
             return {"error": "One or more candidate vector stores are not initialized."}
         
-        comparison = await compare_candidates(query.candidates, openai_client, tavily_client, relevant_vector_stores)
+        # Generate a unique filename based on sorted candidate names
+        filename = f"comparisons/{'_'.join(sorted(query.candidates))}.json"
+        
+        # Check if the comparison already exists
+        if os.path.exists(filename):
+            with open(filename, 'r') as file:
+                comparison = json.load(file)
+            logger.info(f"Retrieved existing comparison from {filename}")
+        else:
+            # Generate new comparison
+            comparison = await compare_candidates(query.candidates, openai_client, tavily_client, relevant_vector_stores)
+            
+            # Ensure the comparisons directory exists
+            os.makedirs('comparisons', exist_ok=True)
+            
+            # Save the new comparison
+            with open(filename, 'w') as file:
+                json.dump(comparison, file)
+            logger.info(f"Generated new comparison and saved to {filename}")
         logger.info(f"Generated comparison: {comparison}")
         return {"comparison": comparison}
     except Exception as e:
@@ -155,24 +174,24 @@ async def win_predictor():
         logger.error(f"Error in win predictor: {e}")
         return {"error": "Failed to generate win predictor analysis."}
 
-from overall_predictor import extract_data_overeall_from_urls, analyze_overall_content, initialize_clients_3
+# from overall_predictor import extract_data_overeall_from_urls, analyze_overall_content, initialize_clients_3
 
-@app.get("/overall_predictor")
-async def win_predictor():
-    openai_client,tavily_client = initialize_clients_3()
-    logger.info("Overall predictor endpoint accessed.")
-    try:
-        urls = [
-            "https://numbers.lk/analysis/akd-maintains-lead-in-numbers-lk-s-2nd-pre-election-poll-ranil-surges-to-second-place",
-            "https://www.ihp.lk/press-releases/ak-dissanayake-and-sajith-premadasa-led-august-voting-intent-amongst-all-adults"
-        ]
-        extracted_content = extract_data_overeall_from_urls(urls)
-        analysis = await analyze_overall_content(extracted_content, openai_client, tavily_client)
-        logger.info(f"Generated overall predictor analysis: {analysis}")
-        return {"data": analysis}
-    except Exception as e:
-        logger.error(f"Error in win predictor: {e}")
-        return {"error": "Failed to generate overrall predictor analysis."}
+# @app.get("/overall_predictor")
+# async def win_predictor():
+#     openai_client,tavily_client = initialize_clients_3()
+#     logger.info("Overall predictor endpoint accessed.")
+#     try:
+#         urls = [
+#             "https://numbers.lk/analysis/akd-maintains-lead-in-numbers-lk-s-2nd-pre-election-poll-ranil-surges-to-second-place",
+#             "https://www.ihp.lk/press-releases/ak-dissanayake-and-sajith-premadasa-led-august-voting-intent-amongst-all-adults"
+#         ]
+#         extracted_content = extract_data_overeall_from_urls(urls)
+#         analysis = await analyze_overall_content(extracted_content, openai_client, tavily_client)
+#         logger.info(f"Generated overall predictor analysis: {analysis}")
+#         return {"data": analysis}
+#     except Exception as e:
+#         logger.error(f"Error in win predictor: {e}")
+#         return {"error": "Failed to generate overrall predictor analysis."}
 
 
 if __name__ == "__main__":
