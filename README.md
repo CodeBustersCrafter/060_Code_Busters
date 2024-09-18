@@ -10,7 +10,7 @@ The project is deployed and accessible at: https://bit.ly/SL_Election
 2. [Prerequisites](%EF%B8%8F-prerequisites)
 3. [Project Structure](#-project-structure)
 4. [Getting Started](#-getting-started)
-5. [Running the Application](%EF%B8%8F-running-the-application)
+5. [Running the Application](#%EF%B8%8F-running-the-application)
 6. [Usage](#-usage)
 7. [Troubleshooting](#-troubleshooting)
 8. [Contributing](#-contributing)
