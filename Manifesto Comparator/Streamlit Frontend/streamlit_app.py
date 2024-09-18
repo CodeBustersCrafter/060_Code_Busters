@@ -175,7 +175,7 @@ def win_predictor():
                     for i, column in enumerate(df.columns):
                         fig.add_trace(go.Scatter(x=df.index, y=df[column], mode='lines+markers', name=column, line=dict(color=colors[i % len(colors)])))
                     fig.update_layout(title=key, xaxis_title='Month', yaxis_title='Percentage', legend_title='Candidates')
-                    st.plotly_chart(fig)
+                    st.plotly_chart(fig, use_container_width=True)
                 elif value['type'] == "pie":
                     st.subheader(key)
                     df = pd.DataFrame(value["data"])
@@ -396,6 +396,7 @@ def common():
                 margin: 4px 2px;
                 cursor: pointer;
                 border-radius: 12px;
+                width: 100%;
             }
             </style>
             <a href="https://eservices.elections.gov.lk/pages/myVoterRegistrationElection.aspx" target="_blank">
@@ -420,6 +421,7 @@ def common():
                 margin: 4px 2px;
                 cursor: pointer;
                 border-radius: 12px;
+                width: 100%;
             }
             </style>
             <a href="https://eservices.elections.gov.lk/pages/ec_ct_KYC_PRE_RP.aspx?ref=MTE%3d" target="_blank">
@@ -513,10 +515,10 @@ def common():
 
     with col4:
         st.markdown("""
-            <div style="background-color: #f0f0f0; border-radius: 10px; padding: 15px; border: 1px solid #cccccc;">
-                <h3 style="color: #333333;">Disclaimer</h3>
-                <p style="color: #555555;">These charts represent poll data from various sources and time periods. The accuracy and methodology of each poll may vary. Please interpret the results with caution and refer to the original sources for more detailed information.</p>
-                <p style="color: #555555;">Note: Poll results may not be indicative of final election outcomes.</p>
+            <div style="background-color: #000000; border-radius: 10px; padding: 15px; border: 1px solid red;">
+                <h3 style="color: red;">Disclaimer</h3>
+                <p style="color: red;">These charts represent poll data from various sources and time periods. The accuracy and methodology of each poll may vary. Please interpret the results with caution and refer to the original sources for more detailed information.</p>
+                <p style="color: red;">Note: Poll results may not be indicative of final election outcomes.</p>
             </div>
         """, unsafe_allow_html=True)
 
@@ -551,6 +553,14 @@ def home():
         .card:hover {
             transform: translateY(-5px);
             box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+        @media (max-width: 768px) {
+            .big-font {
+                font-size: 24px !important;
+            }
+            .card {
+                padding: 15px;
+            }
         }
         </style>
         """,
@@ -616,6 +626,32 @@ def home():
             .past-elections-card {
                 background: linear-gradient(135deg, #9C27B0, #6A1B9A);
             }
+            .card-button {
+                background-color: rgba(255, 255, 255, 0.2);
+                border: none;
+                color: white;
+                padding: 10px 20px;
+                text-align: center;
+                text-decoration: none;
+                display: inline-block;
+                font-size: 16px;
+                margin-top: 10px;
+                cursor: pointer;
+                border-radius: 5px;
+                transition: background-color 0.3s;
+            }
+            .card-button:hover {
+                background-color: rgba(255, 255, 255, 0.3);
+            }
+            @media (max-width: 768px) {
+                .card {
+                    height: auto;
+                    min-height: 200px;
+                }
+                .card-container {
+                    flex-direction: column;
+                }
+            }
         </style>
         """,
         unsafe_allow_html=True
@@ -638,6 +674,7 @@ def home():
                 </div>
             </div>
         ''', unsafe_allow_html=True)
+        st.button("Comparator Manifestos", key="manifesto_button", on_click=set_app_mode, args=("Manifesto Comparator",))
 
     with col2:
         st.markdown('''
@@ -651,6 +688,7 @@ def home():
                 </div>
             </div>
         ''', unsafe_allow_html=True)
+        st.button("Predict the Winner", key="win_predictor_button", on_click=set_app_mode, args=("Win Predictor",))
 
     with col3:
         st.markdown('''
@@ -664,6 +702,7 @@ def home():
             </div>
         </div>
     ''', unsafe_allow_html=True)
+        st.button("Chat Now", key="chat_bot_button", on_click=set_app_mode, args=("Election Chat Bot",))
 
     with col4:
         st.markdown('''
@@ -677,6 +716,7 @@ def home():
             </div>
         </div>
     ''', unsafe_allow_html=True)
+        st.button("View Election History", key="history_button", on_click=set_app_mode, args=("Past Elections",))
 
     # Call the common function here to display the poll results
     common()
