@@ -6,7 +6,7 @@ The project is deployed and accessible at: https://bit.ly/SL_Election
 
 ## 📚 Table of Contents
 
-1. [Features](#Features)
+1. [Features](#🛠 Features)
 2. [Prerequisites](#Prerequisites)
 3. [Project Structure](#project-structure)
 4. [Getting Started](#getting-started)
