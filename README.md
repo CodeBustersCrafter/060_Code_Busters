@@ -6,7 +6,7 @@ The project is deployed and accessible at: https://bit.ly/SL_Election
 
 ## 📚 Table of Contents
 
-1. [Features](#🛠_Features)
+1. [Features](#🛠Features)
 2. [Prerequisites](#Prerequisites)
 3. [Project Structure](#project-structure)
 4. [Getting Started](#getting-started)
@@ -16,7 +16,7 @@ The project is deployed and accessible at: https://bit.ly/SL_Election
 8. [Contributing](#contributing)
 9. [License](#license)
 
-## 🛠 Features
+## 🛠Features
 
 - **AI-Powered Responses:** Generate insightful answers based on Sri Lankan election data.
 - **Candidate Comparison:** Compare policies and manifestos of multiple candidates.
