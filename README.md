@@ -2,6 +2,8 @@
 
 Sri Lankan Election Insights is a comprehensive application that leverages FastAPI for the backend and Streamlit for the frontend to provide AI-generated responses and analysis related to the Sri Lankan Elections 2024. Using advanced technologies like LangChain, FAISS, and LLM models, this project offers an interactive interface for users to query election manifestos, compare candidates, and get predictions on election outcomes.
 
+The project is deployed and accessible at: https://bit.ly/SL_Election
+
 ## 📚 Table of Contents
 
 1. [Features](#features)
@@ -73,7 +75,7 @@ Sri Lankan Election Insights is a comprehensive application that leverages FastA
 
 ## 🖥️ Usage
 
-1. Access the Streamlit app at `http://localhost:8501`.
+1. Access the Streamlit app at `http://localhost:8501` or visit the deployed version at https://bit.ly/SL_Election.
 2. Use the interface to:
    - Ask questions about the Sri Lankan Elections 2024
    - Compare candidate manifestos
