@@ -1,2 +1,9 @@
 [build]
-command = "docker build -t streamlit-app . && docker run -p 8501:8501 streamlit-app"
+  command = "docker build -t streamlit-app . && docker run -p 8501:8501 streamlit-app"
+  publish = "."
+
+[[plugins]]
+  package = "netlify-plugin-docker"
+
+[plugins.inputs]
+  docker_version = "latest"
