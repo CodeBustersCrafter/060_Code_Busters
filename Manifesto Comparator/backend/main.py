@@ -104,7 +104,7 @@ async def fact_check_response(response,prompt, tavily_client):
         fact_check_results = tavily_client.search(query=fact_check_prompt)
         return fact_check_results
     except Exception as e:
-        updated_fact_check_prompt = f"Fact-check on the following statement related to the Sri Lankan Elections 2024: '{prompt}'."
+        updated_fact_check_prompt = f"Fact-check the following statement: '{prompt}'."
         fact_check_results = tavily_client.search(query=updated_fact_check_prompt)
         return fact_check_results
 
@@ -115,7 +115,7 @@ async def combine_responses(response1, response2, tavily_client,prompt):
     
     fact_check_results = await fact_check_response(aggregated_response,prompt, tavily_client)
     
-    combine_responses = f"aggregated_response:\n{aggregated_response}\n\fact_check_results: {fact_check_results}\n\n"
+    combine_responses = f"query\n{aggregated_response}\n\n Fact-Check Results:\n{fact_check_results}\n\n"
     
     return combine_responses
 
@@ -169,9 +169,23 @@ async def generate_response(prompt, openai_client, tavily_client, vector_store, 
             print(f"Error fetching Tavily context: {e}")
             context += "Additional Context: No additional context available.\n\n"
 
-    full_prompt = f"{context}Question: {prompt}\n\nAnswer:"
+    full_prompt = f"""
+    Question: {prompt}
+
+    Instructions:
+    If the Question is related to elections and sri lanka politics:
+    - Use the provided Context and Additional Context to inform your response.
+    Otherwise:
+    - Start the response with a "NO"
+    - If the Question is not about elections and sri lanka politics, respond that you only answer questions about elections and cannot assist with other topics.
+    - Also don't make use of the context and additional context if the question is not related to elections and sri lanka politics.
+
+    {context}
+
+    Answer:
+    """
     
-    if type == 1:
+    if type == 1:        
         openai_response_task = asyncio.create_task(get_openai_response(full_prompt))
         gemini_response_task = asyncio.create_task(get_gemini_response(full_prompt))
         
@@ -180,7 +194,15 @@ async def generate_response(prompt, openai_client, tavily_client, vector_store, 
             gemini_response_task
         )
 
+        print(openai_response)
+        print(gemini_response)
+
+        if gemini_response.strip().upper().startswith("NO"):
+            print("Gemini response was returned")
+            return gemini_response
+        
         combined_response = await combine_responses(openai_response, gemini_response, tavily_client,prompt)
+        print(combined_response)
         final_prompt = f"""You are an AI assistant tasked with validating and summarizing information about the Sri Lankan Elections 2024. Please review the following aggregated response, fact-check the information, and provide a concise, accurate summary that a user would find informative and easy to understand.
 If the fact-check results are not available, please provide a summary of the information.
 Here's an aggregated response about the Sri Lankan Elections 2024. Please validate this information, correct any inaccuracies, and present a clear, factual summary for the end user:
