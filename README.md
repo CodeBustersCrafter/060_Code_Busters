@@ -7,16 +7,16 @@ The project is deployed and accessible at: https://bit.ly/SL_Election
 ## 📚 Table of Contents
 
 1. [Features](#features)
-2. [Prerequisites](#prerequisites)
-3. [Project Structure](#project-structure)
-4. [Getting Started](#getting-started)
-5. [Running the Application](#running-the-application)
-6. [Usage](#usage)
-7. [Troubleshooting](#troubleshooting)
-8. [Contributing](#contributing)
-9. [License](#license)
+2. [Prerequisites](%EF%B8%8F-prerequisites)
+3. [Project Structure](#-project-structure)
+4. [Getting Started](#-getting-started)
+5. [Running the Application](#%EF%B8%8F-running-the-application)
+6. [Usage](#%EF%B8%8F-usage)
+7. [Troubleshooting](#-troubleshooting)
+8. [Contributing](#-contributing)
+9. [License](#-license)
 
-## 🛠 Features
+## 🛠Features
 
 - **AI-Powered Responses:** Generate insightful answers based on Sri Lankan election data.
 - **Candidate Comparison:** Compare policies and manifestos of multiple candidates.
