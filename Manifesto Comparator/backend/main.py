@@ -1,5 +1,6 @@
 import os
 import asyncio
+import time
 from openai import AsyncOpenAI
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import FAISS
@@ -11,6 +12,7 @@ import google.generativeai as genai
 from sklearn.metrics.pairwise import cosine_similarity
 from sentence_transformers import SentenceTransformer
 import concurrent.futures
+from huggingface_hub import InferenceClient
 
 load_dotenv()
 
@@ -18,12 +20,12 @@ load_dotenv()
 similarity_model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
 
 def initialize_clients():
-    openai_api_key = os.getenv("OPENAI_API_KEY")
-    if not openai_api_key:
-        raise ValueError("OPENAI_API_KEY is not set in the environment variables.")
-    openai_client = AsyncOpenAI(
+    LLAMA_api_key = os.getenv("LLAMA_API_KEY")
+    if not LLAMA_api_key:
+        raise ValueError("LLAMA is not set in the environment variables.")
+    LLAMA_client = AsyncOpenAI(
         base_url="https://integrate.api.nvidia.com/v1",
-        api_key=openai_api_key
+        api_key=LLAMA_api_key
     )
     
     tavily_api_key = os.getenv("TAVILY_API_KEY")
@@ -47,11 +49,11 @@ def initialize_clients():
     gemini_model = genai.GenerativeModel(
         model_name="gemini-1.5-flash",
         generation_config=generation_config,
-    )
+    )    
     
     memory = ConversationBufferMemory(return_messages=True)
     
-    return openai_client, tavily_client, memory, gemini_model
+    return LLAMA_client, tavily_client, memory, gemini_model
 
 def create_vector_db():
     try:
@@ -119,12 +121,12 @@ async def combine_responses(response1, response2, tavily_client,prompt):
     
     return combine_responses
 
-async def generate_response(prompt, openai_client, tavily_client, vector_store, memory, type, gemini_model):
+async def generate_response(prompt, LLAMA_client, tavily_client, vector_store, memory, type, gemini_model):
 
-    async def get_openai_response(prompt):
+    async def get_LLAMA_response(prompt):
         try:
-            completion = await openai_client.chat.completions.create(
-                model="meta/llama-3.1-405b-instruct",
+            completion = await LLAMA_client.chat.completions.create(
+                model="meta/llama-3.1-70b-instruct",
                 messages=[
                     {"role": "system", "content": "You are a helpful assistant that provides information about Sri Lankan Elections 2024."},
                     {"role": "user", "content": prompt}
@@ -138,7 +140,7 @@ async def generate_response(prompt, openai_client, tavily_client, vector_store, 
             # Handle the case where the response is a string instead of an object
             return completion
         except Exception as e:
-            print(f"Error in get_openai_response: {e}")
+            print(f"Error in get_LLAMA_response: {e}")
             return "An error occurred while processing your request. Try again later."
     
     async def get_gemini_response(prompt):
@@ -147,8 +149,8 @@ async def generate_response(prompt, openai_client, tavily_client, vector_store, 
         response = await loop.run_in_executor(None, chat_session.send_message, prompt)
         return response.text
     
-    if is_greeting_or_simple_query(prompt):
-        print("greeting or simple query")
+    if not is_election_or_politics_related(prompt):
+        print("Not election or politics related")
         response = await get_gemini_response(prompt)
     
         if type == 1:
@@ -173,64 +175,75 @@ async def generate_response(prompt, openai_client, tavily_client, vector_store, 
     Question: {prompt}
 
     Instructions:
-    If the Question is related to elections and sri lanka politics:
-    - Use the provided Context and Additional Context to inform your response.
-    Otherwise:
-    - Start the response with a "NO"
-    - If the Question is not about elections and sri lanka politics, respond that you only answer questions about elections and cannot assist with other topics.
-    - Also don't make use of the context and additional context if the question is not related to elections and sri lanka politics.
+        Use the provided Context and Additional Context to inform your response.
 
     {context}
 
     Answer:
     """
     
-    if type == 1:        
-        openai_response_task = asyncio.create_task(get_openai_response(full_prompt))
+    if type == 1:
+        LLAMA_response_task = asyncio.create_task(get_LLAMA_response(full_prompt))
         gemini_response_task = asyncio.create_task(get_gemini_response(full_prompt))
         
-        openai_response, gemini_response = await asyncio.gather(
-            openai_response_task,
+        LLAMA_response, gemini_response = await asyncio.gather(
+            LLAMA_response_task,
             gemini_response_task
         )
 
-        print(openai_response)
+        print(LLAMA_response)
         print(gemini_response)
-
-        if gemini_response.strip().upper().startswith("NO"):
-            print("Gemini response was returned")
-            return gemini_response
         
-        combined_response = await combine_responses(openai_response, gemini_response, tavily_client,prompt)
+        combined_response = await combine_responses(LLAMA_response, gemini_response, tavily_client,prompt)
         print(combined_response)
         final_prompt = f"""You are an AI assistant tasked with validating and summarizing information about the Sri Lankan Elections 2024. Please review the following aggregated response, fact-check the information, and provide a concise, accurate summary that a user would find informative and easy to understand.
-If the fact-check results are not available, please provide a summary of the information.
-Here's an aggregated response about the Sri Lankan Elections 2024. Please validate this information, correct any inaccuracies, and present a clear, factual summary for the end user:
-If there was any inacurate information don't tell about it in the summary only add the correct information.
-Make sure you Don't add any markdown syntax to the topic of the response(It is a must)
-{combined_response}"""
+        If the fact-check results are not available, please provide a summary of the information.
+        Here's an aggregated response about the Sri Lankan Elections 2024. Please validate this information, correct any inaccuracies, and present a clear, factual summary for the end user:
+        If there was any inacurate information don't tell about it in the summary only add the correct information.
+        Make sure you Don't add any markdown syntax to the topic of the response(It is a must)
+        {combined_response}"""
         
         final_response = await get_gemini_response(final_prompt)
         memory.save_context({"input": prompt}, {"output": final_response})
-        return final_response
-    
+        return final_response    
     else:
-        return await get_openai_response(full_prompt)
+        return await get_gemini_response(full_prompt)
 
-def is_greeting_or_simple_query(prompt):
-    common_phrases = {
-        "greetings": ["hello", "hi", "hey"],
-        "farewell": ["goodbye", "bye", "see you"],
-        "thanking": ["thank you", "thanks", "appreciate it"],
-    }
-    
-    prompt_lower = prompt.lower().strip()
-    
-    return any(
-        phrase == prompt_lower
-        for category in common_phrases.values()
-        for phrase in category
+def is_election_or_politics_related(prompt):
+    # Creating SLM client
+    SLM = InferenceClient(
+        "mistralai/Mistral-7B-Instruct-v0.1",
+        token=os.getenv("HuggingFace_API_KEY"),
     )
+
+    SLM_prompt = f"""
+    Determine if the following prompt is related to elections or politics in Sri Lanka.
+    Respond with 'Yes' if it is, and 'No' if it is not.
+    
+    Prompt: {prompt}
+    """
+        
+    start_time = time.time()
+        
+    SLM_response = ""
+    for message in SLM.chat_completion(
+            messages=[{"role": "user", "content": SLM_prompt}],
+            max_tokens=10,
+            stream=True,
+        ):
+            content = message.choices[0].delta.content
+            if content:
+                print(content, end="")
+                SLM_response += content 
+
+    end_time = time.time()
+    process_time = end_time - start_time
+        
+    print(f"\nSLM_response: {SLM_response.strip()}")
+    print(f"Process time: {process_time:.2f} seconds")
+
+    return SLM_response.strip().lower() == "yes"
+
 
 def create_candidate_vector_stores():
     script_dir = os.path.dirname(os.path.realpath(__file__))
@@ -273,7 +286,7 @@ def create_candidate_vector_stores():
     
     return vector_stores
 
-async def compare_candidates(candidates, openai_client, tavily_client, candidate_vector_stores):
+async def compare_candidates(candidates, LLAMA_client, tavily_client, candidate_vector_stores):
     if candidate_vector_stores is None:
         print("Failed to create or retrieve candidate vector stores.")
         return
@@ -312,7 +325,7 @@ async def compare_candidates(candidates, openai_client, tavily_client, candidate
         5. Include important numerical data, targets, or timelines if mentioned.
         6. Highlight any unique or standout policies."""
         
-        completion = await openai_client.chat.completions.create(
+        completion = await LLAMA_client.chat.completions.create(
             model="meta/llama-3.1-405b-instruct",
             messages=[{"role": "user", "content": full_prompt}],
             temperature=0.3,
@@ -365,25 +378,25 @@ async def compare_candidates(candidates, openai_client, tavily_client, candidate
     9. Foreign Policy and International Relations
     """
     
-    comparison = await generate_response(comparison_prompt, openai_client, tavily_client, candidate_vector_stores[candidates[0]], None, 0, None)
+    comparison = await generate_response(comparison_prompt, LLAMA_client, tavily_client, candidate_vector_stores[candidates[0]], None, 0, None)
     return comparison
 
 if __name__ == "__main__":
     import asyncio
     
     async def main():
-        openai_client, tavily_client, memory, gemini_model = initialize_clients()
+        LLAMA_client, tavily_client, memory, gemini_model = initialize_clients()
         vector_store = create_vector_db()
         if vector_store is None:
             print("Failed to create vector store.")
             return
         prompt = "When is the next election in Sri Lanka?"
-        response = await generate_response(prompt, openai_client, tavily_client, vector_store, memory, 1, gemini_model)
+        response = await generate_response(prompt, LLAMA_client, tavily_client, vector_store, memory, 1, gemini_model)
         # print(response)
         
         candidate_vector_stores = create_candidate_vector_stores()
         candidates = ["Sajith", "Ranil", "Anura", "Namal", "Dilith"]
-        comparison = await compare_candidates(candidates, openai_client, tavily_client, candidate_vector_stores)
+        comparison = await compare_candidates(candidates, LLAMA_client, tavily_client, candidate_vector_stores)
         print("\nComparison of candidates' manifestos:")
         # print(comparison)
         

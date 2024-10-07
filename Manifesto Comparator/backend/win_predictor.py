@@ -129,7 +129,7 @@ async def analyze_content(polling_data, web_scraped_content, openai_client, tavi
     [List the top 5 candidates here]
     Detailed analysis:
     - predicted_winner: [Candidate Name]
-    - probability_estimates:
+    - probability_estimates(All total should be 1):
         - [Candidate1]: 0.XX
         - [Candidate2]: 0.YY
         - [Candidate3]: 0.ZZ
@@ -148,8 +148,8 @@ async def analyze_content(polling_data, web_scraped_content, openai_client, tavi
         
     2. Organize the data for plotting various graphs(One of data analysis should be based on provinces and the graph should be a map).
     Use {web_scraped_content} for this.
-    These graphs are prefered Candidate Support, Province-level Support, Voter Sentiment Over Time, support by age groups, support by education level, support by income level, support by religion
-    Your response for the 2nd point should be in JSON format following Streamlit library syntax. For each graph, include a key-value pair where the key is the graph name, and the value is an object containing the data and the type of the graph.
+    These graphs are prefered Candidate Support(bar), Province-level Support(stacked_bar), Voter Sentiment Over Time(line), support by age groups(stacked_bar), support by education level(stacked_bar), support by income level(stacked_bar), support by religion(stacked_bar)
+    Your response for the 2nd point should be in JSON format following Streamlit library syntax. For each graph, include a key-value pair where the key is the graph name, and the value is an object containing the data and the type of the graph. (Include alll candidates)
 
     - Do not include any descriptive text in the response.
     - The response should be a string that can be directly converted into a JSON object in Python without additional symbols.

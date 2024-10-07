@@ -934,6 +934,241 @@ def past_elections():
         
         st.markdown("<hr style='margin: 40px 0; border: 0; border-top: 2px solid #e0e0e0;'>", unsafe_allow_html=True)
 
+
+def presidential_election(availability):
+    st.header("🗳 Presidential Elections")
+    if availability:
+        getData()
+    else:
+        st.write("Comming Soon...")
+def getData():
+    sheet_id = "1NCLSJbgstmJu2zI-VGB7p-7yKs9X13po2O1XKgIAhz0"
+    import pandas as pd
+    
+    # Get the list of all sheet names
+    sheet_list = pd.read_excel(f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=xlsx", sheet_name=None).keys()
+    
+    # Remove the last sheet and put it first
+    sheet_list = list(sheet_list)
+    last_sheet = sheet_list.pop()
+    sheet_list.insert(0, last_sheet)
+
+    # Create tabs for each sheet
+    tabs = st.tabs(sheet_list)
+    
+    # Create a dictionary to store the loaded data for each sheet
+    sheet_data = {}
+
+    # Loop through each tab and sheet
+    for tab, sheet_name in zip(tabs, sheet_list):
+        with tab:
+            st.subheader(f"Data from sheet: {sheet_name}")
+            
+            # Check if the data for this sheet has already been loaded
+            if sheet_name not in sheet_data:
+                # If not, load the data when the tab is clicked
+                if st.button(f"Load data for {sheet_name}"):
+                    with st.spinner(f"Loading data for {sheet_name}..."):
+                        df = pd.read_excel(f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=xlsx", sheet_name=sheet_name)
+                        sheet_data[sheet_name] = df
+                    st.success(f"Data for {sheet_name} loaded successfully!")
+            
+            # If the data is loaded, display it and create visualizations
+            if sheet_name in sheet_data:
+                col1,col2 = st.columns(2,gap='large')
+                with col1:
+                    st.markdown("""
+                        <style>
+                            .stDataFrame {
+                                background-color: #f0f8ff;
+                                border-radius: 10px;
+                                padding: 10px;
+                                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                            }
+                            .stDataFrame [data-testid="stDataFrameDataCell"] {
+                                font-family: 'Arial', sans-serif;
+                                color: #333;
+                            }
+                            .stDataFrame [data-testid="stDataFrameDataCell"]:nth-child(even) {
+                                background-color: #e6f3ff;
+                            }
+                        </style>
+                    """, unsafe_allow_html=True)
+                    
+                        # Start of Selection
+                        # Start of Selection
+                    st.markdown("### 📊 Election Data")
+                    
+                    column_config = {}
+                    
+                    # Hide the first column by excluding it from the displayed dataframe
+                    df_display = sheet_data[sheet_name].copy()
+                    first_column = df_display.columns[0]
+                    df_display.drop(columns=[first_column], inplace=True)
+                    
+                    # Freeze the second column by keeping it first in the display
+                    second_column = df_display.columns[0]
+                    column_config[second_column] = st.column_config.Column()
+                    
+                    # Configure the remaining columns
+                    for col in df_display.columns[1:]:
+                        if df_display[col].dtype in ['float64', 'int64']:
+                            column_config[col] = st.column_config.NumberColumn(
+                                format="{:.2f}%",
+                                help=f"Percentage for {col}",
+                                min_value=0,
+                                max_value=100,
+                                step=0.01,
+                                color="blue"
+                            )
+                    
+                    st.dataframe(
+                        df_display,
+                        use_container_width=True,
+                        hide_index=True,
+                        height=1000,  # Adjust this value as needed to fit all rows
+                        column_config=column_config
+                    )
+                    st.markdown("🔍 Hover over column headers for more information.")
+                with col2:
+                    visualize_data(sheet_data[sheet_name])
+            else:
+                st.info(f"Click the button above to load data for {sheet_name}")
+
+def visualize_data(df):
+    import plotly.express as px
+    
+    # Define color mapping for candidates
+    color_map = {
+        'RW': 'green',
+        'Sajith': 'yellowgreen',
+        'AKD': 'purple',
+        'Namal': 'red',
+        'Dilith': 'blue',
+        'Other': 'white'
+    }
+
+    # Filter out the 'TOTAL' and 'PRECENTAGE' rows
+    df_filtered = df[~df['Electoral Division'].isin(['TOTAL', 'PRECENTAGE'])]
+    
+    # Create the map
+    import pydeck as pdk
+    from urllib.error import URLError
+
+    @st.cache_data
+    def load_electoral_district_data():
+        # Updated electoral district data for Sri Lanka
+        districts = [
+            {"name": "Colombo", "latitude": 6.9271, "longitude": 79.8612},
+            {"name": "Gampaha", "latitude": 7.0917, "longitude": 80.0000},
+            {"name": "Kalutara", "latitude": 6.5854, "longitude": 79.9607},
+            {"name": "Kandy", "latitude": 7.2906, "longitude": 80.6337},
+            {"name": "Matale", "latitude": 7.4675, "longitude": 80.6234},
+            {"name": "Nuwara Eliya", "latitude": 6.9497, "longitude": 80.7891},
+            {"name": "Galle", "latitude": 6.0535, "longitude": 80.2210},
+            {"name": "Matara", "latitude": 5.9549, "longitude": 80.5550},
+            {"name": "Hambantota", "latitude": 6.1429, "longitude": 81.1212},
+            {"name": "Jaffna", "latitude": 9.6615, "longitude": 80.0255},
+            {"name": "Vanni", "latitude": 8.7514, "longitude": 80.4997},
+            {"name": "Batticaloa", "latitude": 7.7170, "longitude": 81.7000},
+            {"name": "Digamadulla", "latitude": 7.2853, "longitude": 81.6716},
+            {"name": "Trincomalee", "latitude": 8.5711, "longitude": 81.2335},
+            {"name": "Kurunegala", "latitude": 7.4818, "longitude": 80.3609},
+            {"name": "Puttalam", "latitude": 8.0408, "longitude": 79.8394},
+            {"name": "Anuradhapura", "latitude": 8.3114, "longitude": 80.4037},
+            {"name": "Polonnaruwa", "latitude": 7.9403, "longitude": 81.0188},
+            {"name": "Badulla", "latitude": 6.9934, "longitude": 81.0550},
+            {"name": "Monaragala", "latitude": 6.8872, "longitude": 81.3501},
+            {"name": "Ratnapura", "latitude": 6.7056, "longitude": 80.3847},
+            {"name": "Kegalle", "latitude": 7.2513, "longitude": 80.3464}
+        ]
+        return pd.DataFrame(districts)
+
+    try:
+        # Load the electoral district data
+        district_data = load_electoral_district_data()
+
+        # Merge the district data with the input DataFrame
+        df_filtered.index = df_filtered.index.astype(str)
+        merged_data = pd.merge(district_data, df_filtered, left_on='name', right_on='Electoral Division', how='left')
+
+        # Create layers for each candidate
+        layers = []
+        candidates = ['RW', 'Sajith', 'AKD', 'Namal', 'Dilith']
+        colors = [[0, 0, 255], [0, 255, 0], [255, 0, 0], [255, 165, 0], [128, 0, 128]]
+
+        for candidate, color in zip(candidates, colors):
+            layer = pdk.Layer(
+                "ColumnLayer",
+                data=merged_data,
+                get_position=["longitude", "latitude"],
+                get_elevation=candidate,
+                elevation_scale=100,
+                radius=10000,
+                get_fill_color=color + [160],
+                pickable=True,
+                auto_highlight=True
+            )
+            layers.append(layer)
+
+        # Create a TextLayer for district names
+        text_layer = pdk.Layer(
+            "TextLayer",
+            data=merged_data,
+            get_position=["longitude", "latitude"],
+            get_text="name",
+            get_size=16,
+            get_color=[0, 0, 0, 255],
+            get_angle=0,
+            get_text_anchor="middle",
+            get_alignment_baseline="center"
+        )
+        layers.append(text_layer)
+
+        # Render the map with the 3D columns and district names
+        st.pydeck_chart(
+            pdk.Deck(
+                map_style="mapbox://styles/mapbox/light-v9",
+                initial_view_state={
+                    "latitude": 7.8731,
+                    "longitude": 80.7718,
+                    "zoom": 7,
+                    "pitch": 50
+                },
+                layers=layers,
+                tooltip={
+                    "html": "<b>{name}</b><br/>RW: {RW}<br/>Sajith: {Sajith}<br/>AKD: {AKD}<br/>Namal: {Namal}<br/>Dilith: {Dilith}",
+                    "style": {"backgroundColor": "steelblue", "color": "white"}
+                }
+            )
+        )
+
+    except URLError as e:
+        st.error(f"Data load error: {e}")
+    except Exception as e:
+        st.error(f"An error occurred: {e}")
+    
+    # Create the stacked bar chart
+    df_melt = df_filtered.melt(id_vars=['Electoral Division'], 
+                               value_vars=['RW', 'Sajith', 'AKD', 'Namal', 'Dilith', 'Other'],
+                               var_name='Candidate', value_name='Votes')
+    
+    fig_bar = px.bar(df_melt, x='Electoral Division', y='Votes', color='Candidate',
+                     title='Votes by Candidate and Division',
+                     color_discrete_map=color_map)
+    
+    st.plotly_chart(fig_bar)
+    
+    # Create the leaderboard
+    leaderboard = df.loc[df['Electoral Division'] == 'TOTAL', ['RW', 'Sajith', 'AKD', 'Namal', 'Dilith', 'Other']].T
+    if not leaderboard.empty:
+        leaderboard = leaderboard.sort_values(by=leaderboard.columns[0], ascending=False)
+        leaderboard.columns = ['Total Votes']
+        
+        st.subheader("Leaderboard")
+        st.table(leaderboard.style.background_gradient(cmap='YlOrRd'))
+    else:
+        st.warning("No data available for the leaderboard.")
 def main():
     st.set_page_config(page_title="Sri Lankan Election Insights", layout="wide")
     
@@ -956,14 +1191,16 @@ def main():
             set_app_mode("Win Predictor")
         if st.button("💬 Election Chat Bot", use_container_width=True):
             set_app_mode("Election Chat Bot")
-        if st.button("🗳️ Past Elections", use_container_width=True):
+        if st.button("🗳 Past Elections", use_container_width=True):
             set_app_mode("Past Elections")
+        if st.button("🗳 Presidential Elections", use_container_width=True):
+            set_app_mode("Presidential Elections")
         st.markdown("---")
         st.info("Select a feature from above to get started.")
 
     col1, col2 = st.columns([3, 1])
     with col1:
-        st.title("🗳️ Sri Lankan Election Insights")
+        st.title("🗳 Sri Lankan Election Insights")
     with col2:
         st.markdown(f"""
         <style>
@@ -1028,6 +1265,8 @@ def main():
         election_chatbot()
     elif st.session_state["app_mode"] == "Past Elections":
         past_elections()
+    elif st.session_state["app_mode"] == "Presidential Elections":
+        presidential_election(True)
     else:
         home()
 
@@ -1041,9 +1280,10 @@ def main():
     st.markdown("""
         <div style='text-align: center; color: #666;'>
             <p>© 2023 Sri Lankan Election Insights. All rights reserved.</p>
-            <p>Developed with ❤️ for a better informed electorate.</p>
+            <p>Developed with ❤ for a better informed electorate.</p>
         </div>
     """, unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()
+
