@@ -12,10 +12,10 @@ from tavily import Client as TavilyClient
 load_dotenv()
 
 def initialize_clients_2():
-    openai_api_key = os.getenv("OPENAI_API_KEY")
+    openai_api_key = os.getenv("LLAMA_API_KEY")
     if not openai_api_key:
-        raise ValueError("OPENAI_API_KEY is not set in the environment variables.")
-    openai_client = AsyncOpenAI(
+        raise ValueError("LLAMA_API_KEY is not set in the environment variables.")
+    LLAMA_client = AsyncOpenAI(
         base_url="https://integrate.api.nvidia.com/v1",
         api_key=openai_api_key
     )
@@ -25,7 +25,7 @@ def initialize_clients_2():
         raise ValueError("TAVILY_API_KEY is not set in the environment variables.")
     tavily_client = TavilyClient(tavily_api_key)
     
-    return openai_client, tavily_client
+    return LLAMA_client, tavily_client
 
 def load_polling_data(filepath):
     try:
@@ -100,7 +100,7 @@ class ConfidenceEstimator:
         
         return confidence_levels
 
-async def analyze_content(polling_data, web_scraped_content, openai_client, tavily_client):
+async def analyze_content(polling_data, web_scraped_content, LLAMA_client, tavily_client):
     analyzer = PollingAnalyzer(polling_data)
     polling_results = analyzer.analyze()
     
@@ -157,7 +157,7 @@ async def analyze_content(polling_data, web_scraped_content, openai_client, tavi
     - Ensure each graph name is meaningful and descriptive.
     """
     
-    completion = await openai_client.chat.completions.create(
+    completion = await LLAMA_client.chat.completions.create(
         model="meta/llama-3.1-405b-instruct",
         messages=[{"role": "user", "content": prompt}],
         temperature=0.6,
@@ -166,43 +166,43 @@ async def analyze_content(polling_data, web_scraped_content, openai_client, tavi
     )
     return completion.choices[0].message.content
 
-async def main():
-    openai_client, tavily_client = initialize_clients_2()
-    polling_data = load_polling_data("polling_data.json")
+# async def main():
+#     LLAMA_client, tavily_client = initialize_clients_2()
+#     polling_data = load_polling_data("polling_data.json")
     
-    urls = [
-        "https://numbers.lk/analysis/akd-maintains-lead-in-numbers-lk-s-2nd-pre-election-poll-ranil-surges-to-second-place",
-        "https://www.ihp.lk/press-releases/ak-dissanayake-and-sajith-premadasa-led-august-voting-intent-amongst-all-adults"
-    ]
-    web_scraped_content = extract_data_from_urls(urls)
+#     urls = [
+#         "https://numbers.lk/analysis/akd-maintains-lead-in-numbers-lk-s-2nd-pre-election-poll-ranil-surges-to-second-place",
+#         "https://www.ihp.lk/press-releases/ak-dissanayake-and-sajith-premadasa-led-august-voting-intent-amongst-all-adults"
+#     ]
+#     web_scraped_content = extract_data_from_urls(urls)
     
-    if polling_data:
-        analysis = await analyze_content(polling_data, web_scraped_content, openai_client, tavily_client)
+#     if polling_data:
+#         analysis = await analyze_content(polling_data, web_scraped_content, LLAMA_client, tavily_client)
         
-        # Split the response into three parts
-        parts = analysis.split("\n\n")
-        candidates = parts[0].strip()
-        detailed_analysis_json = parts[1].strip()
-        graph_data_json = parts[2].strip()
+#         # Split the response into three parts
+#         parts = analysis.split("\n\n")
+#         candidates = parts[0].strip()
+#         detailed_analysis_json = parts[1].strip()
+#         graph_data_json = parts[2].strip()
         
-        # Parse the JSON strings
-        try:
-            detailed_analysis = json.loads(detailed_analysis_json)
-            graph_data = json.loads(graph_data_json)
-        except json.JSONDecodeError as e:
-            print(f"Error parsing JSON: {str(e)}")
-            detailed_analysis = {}
-            graph_data = {}
+#         # Parse the JSON strings
+#         try:
+#             detailed_analysis = json.loads(detailed_analysis_json)
+#             graph_data = json.loads(graph_data_json)
+#         except json.JSONDecodeError as e:
+#             print(f"Error parsing JSON: {str(e)}")
+#             detailed_analysis = {}
+#             graph_data = {}
         
-        # Print the results
-        print("Top 5 Candidates:")
-        print(candidates)
-        print("\nDetailed Analysis:")
-        print(json.dumps(detailed_analysis, indent=2))
-        print("\nGraph Data:")
-        print(json.dumps(graph_data, indent=2))
-    else:
-        print("Failed to load polling data.")
+#         # Print the results
+#         print("Top 5 Candidates:")
+#         print(candidates)
+#         print("\nDetailed Analysis:")
+#         print(json.dumps(detailed_analysis, indent=2))
+#         print("\nGraph Data:")
+#         print(json.dumps(graph_data, indent=2))
+#     else:
+#         print("Failed to load polling data.")
 
-if __name__ == "__main__":
-    asyncio.run(main())
+# if __name__ == "__main__":
+#     asyncio.run(main())

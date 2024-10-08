@@ -1,7 +1,11 @@
+import time
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
-from main import initialize_clients, generate_response, create_vector_db, create_candidate_vector_stores, compare_candidates
+from Chatbot import initialize_clients, generate_response
+from Vector_DB_Creator import create_vector_db, create_candidate_vector_stores
+from win_predictor import initialize_clients_2, extract_data_from_urls, analyze_content, load_polling_data
+from Comparatot import initialize_clients_3, compare_candidates
 import os
 import logging
 import requests
@@ -30,7 +34,9 @@ app.add_middleware(
 
 # Initialize client and vector stores
 try:
-    openai_client,tavily_client,memory,gemini_model = initialize_clients()
+    Chat_LLAMA_client, Chat_tavily_client, Chat_memory, Chat_gemini_model, Chat_openai_client = initialize_clients()
+    Pred_LLAMA_client, Pred_tavily_client = initialize_clients_2()
+    Comp_LLAMA_client = initialize_clients_3()
     vector_store = create_vector_db()
     candidate_vector_stores = create_candidate_vector_stores()
     if vector_store is None or candidate_vector_stores is None:
@@ -78,9 +84,9 @@ def translate_text(text, from_lang, to_lang):
 async def root():
     logger.info("Root endpoint accessed.")
     return {"message": "Hello World"}
-
 @app.post("/generate")
 async def generate(query: Query):
+    start_time = time.time()
     logger.info(f"Received prompt: {query.prompt} in language: {query.language}")
     if vector_store is None:
         logger.error("Vector store is not initialized.")
@@ -97,7 +103,7 @@ async def generate(query: Query):
         else:
             return {"error": "Unsupported language selected."}
 
-        response = await generate_response(translated_prompt, openai_client, tavily_client, vector_store, memory, 1,gemini_model)
+        response = await generate_response(translated_prompt, Chat_LLAMA_client, Chat_tavily_client, vector_store, Chat_memory, 1,Chat_gemini_model, Chat_openai_client)
 
         # Translate response back to the selected language if necessary
         if query.language.lower() == "english":
@@ -110,9 +116,15 @@ async def generate(query: Query):
             translated_response = response  # Fallback
 
         logger.info(f"Generated response: {translated_response}")
+        end_time = time.time()
+        total_time = end_time - start_time
+        logger.info(f"Full time: {total_time:.2f} seconds")
         return {"response": translated_response}
     except Exception as e:
         logger.error(f"Error generating response: {e}", exc_info=True)
+        end_time = time.time()
+        total_time = end_time - start_time
+        logger.info(f"Full time: {total_time:.2f} seconds")
         return {"error": "Failed to generate response."}
 
 @app.post("/compare")
@@ -140,7 +152,7 @@ async def compare(query: ComparisonQuery):
             logger.info(f"Retrieved existing comparison from {filename}")
         else:
             # Generate new comparison
-            comparison = await compare_candidates(query.candidates, openai_client, tavily_client, relevant_vector_stores)
+            comparison = await compare_candidates(query.candidates, Comp_LLAMA_client, relevant_vector_stores)
             
             # Ensure the comparisons directory exists
             os.makedirs('comparisons', exist_ok=True)
@@ -155,11 +167,10 @@ async def compare(query: ComparisonQuery):
         logger.error(f"Error generating comparison: {e}", exc_info=True)
         return {"error": f"Failed to generate comparison: {str(e)}"}
 
-from win_predictor import extract_data_from_urls, analyze_content, initialize_clients_2, load_polling_data
 
 @app.get("/win_predictor")
 async def win_predictor():
-    openai_client, tavily_client = initialize_clients_2()
+    LLAMA_client, tavily_client = initialize_clients_2()
     logger.info("Win predictor endpoint accessed.")
     try:
         polling_data = load_polling_data("polling_data.json")
@@ -181,7 +192,7 @@ async def win_predictor():
                 "https://www.ihp.lk/press-releases/ak-dissanayake-and-sajith-premadasa-led-august-voting-intent-amongst-all-adults"
             ]
             web_scraped_content = extract_data_from_urls(urls)
-            analysis = await analyze_content(polling_data, web_scraped_content, openai_client, tavily_client)
+            analysis = await analyze_content(polling_data, web_scraped_content, Pred_LLAMA_client, Pred_tavily_client)
             
             # Save the new analysis
             with open(filename, 'w') as file:
