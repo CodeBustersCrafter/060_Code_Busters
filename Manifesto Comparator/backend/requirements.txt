@@ -1,9 +1,0 @@
-fastapi
-uvicorn
-openai
-langchain
-faiss-cpu
-sentence-transformers
-langchain-community
-langchain-huggingface
-python-dotenv

@@ -14,8 +14,9 @@ load_dotenv()
 MANIFESTO_API_URL = os.getenv("COMPARATOR_URL", "http://127.0.0.1:8000/compare")
 WIN_PREDICTOR_API_URL = os.getenv("WIN_PREDICTOR_URL", "http://127.0.0.1:8000/win_predictor")
 CHATBOT_API_URL = os.getenv("FASTAPI_URL", "http://127.0.0.1:8000/generate")
+FAKE_DETECTION_API_URL = os.getenv("FAKE_DETECTION_URL", "http://127.0.0.1:8000/fake_detection")
 
-def generate_manifesto_response(prompt, language):
+def generate_response(prompt, language):
     headers = {
         "Content-Type": "application/json"
     }
@@ -90,7 +91,7 @@ def election_chatbot():
                 for i in range(100):
                     time.sleep(0.01)
                     progress_bar.progress(i + 1)
-                response = generate_manifesto_response(user_input, language)
+                response = generate_response(user_input, language)
                 progress_placeholder.empty()
             st.session_state.messages.append({"type": "bot", "text": response, "language": language})
             st.session_state["user_input"] = ""
@@ -1169,6 +1170,39 @@ def visualize_data(df):
         st.table(leaderboard.style.background_gradient(cmap='YlOrRd'))
     else:
         st.warning("No data available for the leaderboard.")
+
+def fake_detection():
+    st.header("🕵️ Fake News Detection")
+    
+    claim = st.text_area("Enter the claim you want to verify:", height=100)
+    
+    if st.button("Verify Claim"):
+        if claim:
+            with st.spinner("Analyzing claim..."):
+                try:
+                    headers = {
+                        "Content-Type": "application/json"
+                    }
+                    payload = {
+                        "prompt": claim
+                    }
+                    response = requests.post(FAKE_DETECTION_API_URL, headers=headers, data=json.dumps(payload))
+                    if response.status_code == 200:
+                        result = response.json()
+                        st.subheader("Final Verdict")
+                        st.info(result["response"])
+                        
+                        st.subheader("Detailed Analysis")
+                        for verification in result["verifications"]:
+                            with st.expander(f"Subclaim: {verification['subclaim']}"):
+                                st.write(verification['verification'])
+                    else:
+                        st.error(f"Error: {response.text}")
+                except requests.exceptions.RequestException as e:
+                    st.error(f"An error occurred: {e}")
+        else:
+            st.warning("Please enter a claim to verify.")
+
 def main():
     st.set_page_config(page_title="Sri Lankan Election Insights", layout="wide")
     
@@ -1191,6 +1225,8 @@ def main():
             set_app_mode("Win Predictor")
         if st.button("💬 Election Chat Bot", use_container_width=True):
             set_app_mode("Election Chat Bot")
+        if st.button("🕵️ Fake News Detection", use_container_width=True):
+            set_app_mode("Fake News Detection")
         if st.button("🗳 Past Elections", use_container_width=True):
             set_app_mode("Past Elections")
         if st.button("🗳 Presidential Elections", use_container_width=True):
@@ -1263,12 +1299,15 @@ def main():
         win_predictor()
     elif st.session_state["app_mode"] == "Election Chat Bot":
         election_chatbot()
+    elif st.session_state["app_mode"] == "Fake News Detection":
+        fake_detection()
     elif st.session_state["app_mode"] == "Past Elections":
         past_elections()
     elif st.session_state["app_mode"] == "Presidential Elections":
         presidential_election(True)
     else:
         home()
+
 
     # Add a footer
     st.markdown("---")

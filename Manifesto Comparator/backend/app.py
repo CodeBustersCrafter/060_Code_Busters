@@ -6,6 +6,7 @@ from Chatbot import initialize_clients, generate_response
 from Vector_DB_Creator import create_vector_db, create_candidate_vector_stores
 from win_predictor import initialize_clients_2, extract_data_from_urls, analyze_content, load_polling_data
 from Comparatot import initialize_clients_3, compare_candidates
+from fake_detection import initialize_clients_4, verify_claim_hiss
 import os
 import logging
 import requests
@@ -37,6 +38,7 @@ try:
     Chat_LLAMA_client, Chat_tavily_client, Chat_memory, Chat_gemini_model, Chat_openai_client = initialize_clients()
     Pred_LLAMA_client, Pred_tavily_client = initialize_clients_2()
     Comp_LLAMA_client = initialize_clients_3()
+    Fake_LLAMA_client, Fake_tavily_client, Fake_SLM = initialize_clients_4()
     vector_store = create_vector_db()
     candidate_vector_stores = create_candidate_vector_stores()
     if vector_store is None or candidate_vector_stores is None:
@@ -84,6 +86,7 @@ def translate_text(text, from_lang, to_lang):
 async def root():
     logger.info("Root endpoint accessed.")
     return {"message": "Hello World"}
+
 @app.post("/generate")
 async def generate(query: Query):
     start_time = time.time()
@@ -170,7 +173,6 @@ async def compare(query: ComparisonQuery):
 
 @app.get("/win_predictor")
 async def win_predictor():
-    LLAMA_client, tavily_client = initialize_clients_2()
     logger.info("Win predictor endpoint accessed.")
     try:
         polling_data = load_polling_data("polling_data.json")
@@ -198,12 +200,23 @@ async def win_predictor():
             with open(filename, 'w') as file:
                 json.dump(analysis, file)
             logger.info(f"Generated new win predictor analysis and saved to {filename}")
-        
+
         logger.info(f"Generated win predictor analysis: {analysis}")
         return {"data": analysis}
     except Exception as e:
         logger.error(f"Error in win predictor: {e}")
         return {"error": "Failed to generate win predictor analysis."}
+
+@app.post("/fake_detection")
+async def fake_detection(claim: Query): 
+    logger.info(f"Received fake detection request for {claim.prompt}")
+    try:
+        final_prediction, verifications = verify_claim_hiss(claim.prompt, Fake_LLAMA_client, Fake_tavily_client, Fake_SLM)
+        return {"response": final_prediction, "verifications": verifications}
+    except Exception as e:
+        logger.error(f"Error in fake detection: {e}")
+        return {"error": "Failed to generate fake detection response."}
+
 
 if __name__ == "__main__":
     import uvicorn
