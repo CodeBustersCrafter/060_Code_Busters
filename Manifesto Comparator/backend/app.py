@@ -46,6 +46,7 @@ class Query(BaseModel):
 
 class ComparisonQuery(BaseModel):
     candidates: list[str]
+    topics: list[str]
 
 AZURE_TRANSLATE_ENDPOINT = os.getenv("AZURE_TRANSLATE_ENDPOINT")
 AZURE_TRANSLATE_KEY = os.getenv("AZURE_TRANSLATE_KEY")
@@ -131,7 +132,7 @@ async def compare(query: ComparisonQuery):
             return {"error": "One or more candidate vector stores are not initialized."}
         
         # Generate a unique filename based on sorted candidate names
-        filename = f"comparisons/{'_'.join(sorted(query.candidates))}.json"
+        filename = f"comparisons/{'_'.join(sorted(query.candidates))}_{'_'.join(sorted(query.topics))}.json"
         
         # Check if the comparison already exists
         if os.path.exists(filename):
@@ -140,7 +141,7 @@ async def compare(query: ComparisonQuery):
             logger.info(f"Retrieved existing comparison from {filename}")
         else:
             # Generate new comparison
-            comparison = await compare_candidates(query.candidates, openai_client, tavily_client, relevant_vector_stores)
+            comparison = await compare_candidates(query.candidates, openai_client, tavily_client, relevant_vector_stores, query.topics)
             
             # Ensure the comparisons directory exists
             os.makedirs('comparisons', exist_ok=True)

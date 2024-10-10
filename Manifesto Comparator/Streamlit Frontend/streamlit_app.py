@@ -44,12 +44,13 @@ def fetch_win_predictor_data():
         st.error(f"An error occurred: {e}")
         return {}
 
-def compare_manifestos(candidates):
+def compare_manifestos(candidates, selected_topics):
     headers = {
         "Content-Type": "application/json"
     }
     payload = {
-        "candidates": candidates
+        "candidates": candidates,
+        "topics": selected_topics
     }
     try:
         response = requests.post(MANIFESTO_API_URL, headers=headers, data=json.dumps(payload))
@@ -77,6 +78,152 @@ def election_chatbot():
     )
     language = language_options[selected_language]
     
+    if 'manifesto_messages' not in st.session_state:
+        st.session_state['manifesto_messages'] = []
+
+    def send_message():
+        user_input = st.session_state["manifesto_user_input"]
+        if user_input:
+            st.session_state.manifesto_messages.append({"type": "user", "text": user_input, "language": language})
+            with st.spinner("Generating response..."):
+                progress_placeholder = st.empty()
+                progress_bar = progress_placeholder.progress(0)
+                for i in range(100):
+                    time.sleep(0.01)
+                    progress_bar.progress(i + 1)
+                response = generate_manifesto_response(user_input, language)
+                # response = {msg: "Hello", chart: {chart_type:"bar", data: {x: [1,2,3], y: [3,2,1]}}}
+                # response = {msg: "Hello", chart: {chart_type:"line", data: {x: [1,2,3], y: [3,2,1]}}}
+                # response = {msg: "Hello", chart: {chart_type:"pie", data: {x: [1,2,3], y: [3,2,1]}}}
+                # response = {msg: "Hello", chart: {chart_type:"map", data: {x: [1,2,3], y: [3,2,1]}}}
+                # response = {msg: "Hello", chart: {chart_type:"stacked_bar", data: {x: [1,2,3], y: [3,2,1]}}}
+                # response = {msg: "Hello", chart: {chart_type:"bar_demographic", data: {x: [1,2,3], y: [3,2,1]}}}
+                # response = {msg: "Hello", chart: {chart_type:"stacked_bar_demographic", data: {x: [1,2,3], y: [3,2,1]}}}
+                
+                progress_placeholder.empty()
+            st.session_state.manifesto_messages.append({"type": "bot", "text": response.get("msg", ""), "chart": response.get("chart", {}), "language": language})
+            st.session_state["manifesto_user_input"] = ""
+            st.session_state["chatbot"] = []
+
+    st.text_input("Type your message here:", key="manifesto_user_input", on_change=send_message)
+    # Add dummy data for chart testing
+    # if st.button("Test Charts"):
+    #     dummy_charts = [
+    #         {"type": "bot", "text": "Bar Chart Test", "chart": {"chart_type": "bar", "data": {"x": ["A", "B", "C"], "y": [3, 1, 4]}}, "language": language},
+    #         {"type": "bot", "text": "Line Chart Test", "chart": {"chart_type": "line", "data": {"x": [1, 2, 3, 4], "y": [1, 4, 2, 3]}}, "language": language},
+    #         {"type": "bot", "text": "Pie Chart Test", "chart": {"chart_type": "pie", "data": {"x": ["Category 1", "Category 2", "Category 3"], "y": [30, 50, 20]}}, "language": language},
+    #         {"type": "bot", "text": "Map Test", "chart": {"chart_type": "map", "data": {"latitude": [7.8731, 6.9271, 9.6615], "longitude": [80.7718, 79.8612, 80.0255]}}, "language": language},
+    #         {"type": "bot", "text": "Stacked Bar Test", "chart": {"chart_type": "stacked_bar", "data": {"x": ["Group A", "Group B", "Group C"], "y1": [1, 2, 3], "y2": [4, 3, 2], "y3": [2, 1, 3]}}, "language": language},
+    #         {"type": "bot", "text": "Bar Demographic Test", "chart": {"chart_type": "bar_demographic", "data": {"Age Group": ["18-25", "26-35", "36-45", "46+"], "Percentage": [20, 30, 25, 25]}}, "language": language},
+    #         {"type": "bot", "text": "Stacked Bar Demographic Test", "chart": {"chart_type": "stacked_bar_demographic", "data": {"Age Group": ["18-25", "26-35", "36-45", "46+"], "Male": [10, 15, 12, 13], "Female": [10, 15, 13, 12]}}, "language": language},
+    #     ]
+    #     st.session_state.manifesto_messages.extend(dummy_charts)
+    # # Initialize the 'chatbot' key in session state if it doesn't exist
+    # if 'chatbot' not in st.session_state:
+    #     st.session_state['chatbot'] = 'general'  # Set a default value, e.g., 'general'
+
+    # # Create a radio button for selecting the chatbot type
+    # chatbot_type = st.radio(
+    #     "Select Chatbot Type",
+    #     ('General Election Bot', 'Election Instructor', 'History Bot'),
+    #     key='chatbot_selector'
+    # )
+
+    # # Update the 'chatbot' value in session state based on user selection
+    # if chatbot_type == 'General Election Bot':
+    #     st.session_state['chatbot'] = 'general'
+    # elif chatbot_type == 'Election Instructor':
+    #     st.session_state['chatbot'] = 'instructor'
+    # else:
+    #     st.session_state['chatbot'] = 'history'
+    for msg in st.session_state.manifesto_messages:
+        if msg["type"] == "user":
+            st.chat_message("user", avatar="👤").markdown(f"{msg['text']} ({selected_language.split()[0]})", help="Your message")
+        else:
+            if st.session_state["chatbot"] == "history":
+                st.chat_message("assistant", avatar="🤖").markdown(f"***General Election Bot***\n\n{msg['text']} ({selected_language.split()[0]})", help="General Election Bot message")
+                display_chart(msg["chart"])
+            elif st.session_state["chatbot"] == "instructor":
+                st.chat_message("assistant", avatar="📜").markdown(f"***Election Instructor***\n\n{msg['text']} ({selected_language.split()[0]})", help="Election instructor message")
+                display_chart(msg["chart"])
+            else:
+                st.chat_message("assistant", avatar="📚").markdown(f"***History Bot***\n\n{msg['text']} ({selected_language.split()[0]})", help="History Bot message")
+                display_chart(msg["chart"])
+
+def display_chart(chart):
+    if chart:
+        if chart.get("chart_type") == "bar":
+            with st.container():
+                placeholder = st.empty()
+                df = pd.DataFrame(chart["data"])
+                for i in range(len(df)):
+                    placeholder.bar_chart(df.iloc[:i+1])
+                    time.sleep(0.3)
+                placeholder.bar_chart(df)
+        elif chart.get("chart_type") == "line":
+            with st.container():
+                placeholder = st.empty()
+                df = pd.DataFrame(chart["data"])
+                for i in range(len(df)):
+                    placeholder.line_chart(df.iloc[:i+1])
+                    time.sleep(0.3)
+                placeholder.line_chart(df)
+        elif chart.get("chart_type") == "pie":
+            import matplotlib.pyplot as plt
+
+            fig, ax = plt.subplots()
+            ax.pie(chart["data"]["y"], labels=chart["data"]["x"], autopct='%1.1f%%')
+            st.pyplot(fig)
+        elif chart.get("chart_type") == "map":
+            with st.container():
+                placeholder = st.empty()
+                df = pd.DataFrame(chart["data"])
+                for i in range(len(df)):
+                    placeholder.map(df.iloc[:i+1])
+                    time.sleep(0.3)
+                placeholder.map(df)
+        elif chart.get("chart_type") == "stacked_bar":
+            with st.container():
+                placeholder = st.empty()
+                df = pd.DataFrame(chart["data"])
+                for i in range(len(df)):
+                    placeholder.bar_chart(df.iloc[:i+1])
+                    time.sleep(0.3)
+                placeholder.bar_chart(df)
+        elif chart.get("chart_type") == "bar_demographic":
+            with st.container():
+                placeholder = st.empty()
+                df = pd.DataFrame(chart["data"])
+                for i in range(len(df)):
+                    placeholder.bar_chart(df.iloc[:i+1])
+                    time.sleep(0.3)
+                placeholder.bar_chart(df)
+        elif chart.get("chart_type") == "stacked_bar_demographic":
+            with st.container():
+                placeholder = st.empty()
+                df = pd.DataFrame(chart["data"])
+                for i in range(len(df)):
+                    placeholder.bar_chart(df.iloc[:i+1])
+                    time.sleep(0.3)
+                placeholder.bar_chart(df)
+        else:
+            st.write("No chart available")
+
+def manifesto_chatbot():
+    # Add language selection with more user-friendly options
+    language_options = {
+        "English 🇬🇧": "English",
+        "සිංහල 🇱🇰": "Sinhala",
+        "தமிழ் 🇱🇰": "Tamil"
+    }
+    selected_language = st.selectbox(
+        "Choose your preferred language",
+        options=list(language_options.keys()),
+        index=0,
+        help="Select the language you'd like to use for chatting with the Manifesto Bot."
+    )
+    language = language_options[selected_language]
+    
     if 'messages' not in st.session_state:
         st.session_state['messages'] = []
 
@@ -99,9 +246,9 @@ def election_chatbot():
 
     for msg in st.session_state.messages:
         if msg["type"] == "user":
-            st.markdown(f"**You:** {msg['text']} ({selected_language.split()[0]})")
+            st.chat_message("user").markdown(f"{msg['text']} ({selected_language.split()[0]})", help="Your message")
         else:
-            st.markdown(f"**Election Bot:** {msg['text']} ({selected_language.split()[0]})")
+            st.chat_message("assistant").markdown(f"***Manifesto Bot***\n\n{msg['text']} ({selected_language.split()[0]})", help="Bot message")
 
 # Global predicted data
 data = None
@@ -334,7 +481,7 @@ def manifesto_comparator():
         "Dilith Jayaweera - Mawbima Janatha Party (MJP)"
     ]
 
-    col1, col2 = st.columns(2)
+    col1, col2 = st.columns([0.7,0.3])
 
     with col1:
         selected_candidate1 = st.selectbox(
@@ -342,35 +489,80 @@ def manifesto_comparator():
             options=candidate_options,
             index=0
         )
-
-    with col2:
         selected_candidate2 = st.selectbox(
             "Select second candidate:",
             options=candidate_options,
             index=1
         )
-
-    if st.button("💡 Compare Manifestos"):
-        if selected_candidate1 == selected_candidate2:
-            st.warning("Please select two different candidates.")
-        else:
-            # Map selected options back to original candidate names
-            selected_names = [
-                candidates[candidate_options.index(selected_candidate1)],
-                candidates[candidate_options.index(selected_candidate2)]
-            ]
-            
-            with st.spinner("Generating comparison..."):
-                progress_placeholder = st.empty()
-                progress_bar = progress_placeholder.progress(0)
-                for i in range(100):
-                    time.sleep(0.01)
-                    progress_bar.progress(i + 1)
-                response = compare_manifestos(selected_names)
-                progress_placeholder.empty()
-                st.success("**Comparison:**")
-                st.write(response)
+        # Add topic selection
+        topics = [
+            "Economic Policy and Growth Strategies",
+            "Education Reform and Innovation",
+            "Energy and Sustainability",
+            "Healthcare System and Public Health",
+            "National Security and Defense",
+            "Legal Framework and Judicial Reform",
+            "Transportation and Mobility",
+            "Infrastructure Development and Modernization",
+            "Foreign Policy and International Relations"
+        ]
+        
+        selected_topics = st.multiselect(
+            "Select topics you're interested in (optional)",
+            options=topics,
+            default=[],
+            help="Choose one or more topics to focus your conversation on specific areas of the manifestos."
+        )
+        if st.button("💡 Compare Manifesto"):
+            if selected_candidate1 == selected_candidate2:
+                st.warning("Please select two different candidates.")
+            else:
+                # Map selected options back to original candidate names
+                selected_names = [
+                    candidates[candidate_options.index(selected_candidate1)],
+                    candidates[candidate_options.index(selected_candidate2)]
+                ]
                 
+                with st.spinner("Generating comparison..."):
+                    progress_placeholder = st.empty()
+                    progress_bar = progress_placeholder.progress(0)
+                    for i in range(100):
+                        time.sleep(0.01)
+                        progress_bar.progress(i + 1)
+                    response = compare_manifestos(selected_names, selected_topics)
+                    progress_placeholder.empty()
+                    st.success("**Comparison:**")
+                    st.write(response)
+
+    with col2:
+        st.markdown("""
+            <style>
+            .frame {
+                border: 2px solid #1E88E5;
+                border-radius: 15px;
+                padding: 25px;
+                box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+                background: linear-gradient(to bottom right, #f0f8ff, #e6f2ff);
+                transition: all 0.3s ease;
+            }
+            .frame:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+            }
+            .frame-title {
+                font-size: 24px;
+                font-weight: bold;
+                color: #1E88E5;
+                text-align: center;
+                margin-bottom: 15px;
+                text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+            }
+            </style>
+            <div class="frame">
+                <div class="frame-title">Manifesto Chatbot</div>
+            </div>
+        """, unsafe_allow_html=True)
+        manifesto_chatbot()
 if 'app_mode' not in st.session_state:
     st.session_state['app_mode'] = "Home"
 

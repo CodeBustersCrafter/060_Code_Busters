@@ -286,7 +286,7 @@ def create_candidate_vector_stores():
     
     return vector_stores
 
-async def compare_candidates(candidates, LLAMA_client, tavily_client, candidate_vector_stores):
+async def compare_candidates(candidates, LLAMA_client, tavily_client, candidate_vector_stores, topics):
     if candidate_vector_stores is None:
         print("Failed to create or retrieve candidate vector stores.")
         return
@@ -295,17 +295,7 @@ async def compare_candidates(candidates, LLAMA_client, tavily_client, candidate_
         if candidate not in candidate_vector_stores:
             return f"No data available for {candidate}."
         
-        sections = [
-            "Economic Policy and Growth Strategies",
-            "Education Reform and Innovation",
-            "Energy and Sustainability",
-            "Healthcare System and Public Health",
-            "National Security and Defense",
-            "Legal Framework and Judicial Reform",
-            "Transportation and Mobility",
-            "Infrastructure Development and Modernization",
-            "Foreign Policy and International Relations"
-        ]
+        sections = topics
         
         async def get_section_context(section):
             return await retrieve_context(f"{section} {prompt}", candidate_vector_stores[candidate], top_k=10)
