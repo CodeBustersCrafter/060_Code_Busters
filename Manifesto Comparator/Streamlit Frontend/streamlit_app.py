@@ -652,13 +652,13 @@ def manifesto_comparator():
                 border: 2px solid #4CAF50;
                 border-radius: 15px;
                 padding: 25px;
-                box-shadow: 0 6px 12px rgba(255,255,255,0.1);
-                background: linear-gradient(to bottom right, #1a1a1a, #2a2a2a);
+                box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+                background: #FFFFFF;
                 transition: all 0.3s ease;
             }
             .frame:hover {
                 transform: translateY(-5px);
-                box-shadow: 0 8px 16px rgba(255,255,255,0.2);
+                box-shadow: 0 8px 16px rgba(0,0,0,0.2);
             }
             .frame-title {
                 font-size: 24px;
@@ -666,7 +666,7 @@ def manifesto_comparator():
                 color: #4CAF50;
                 text-align: center;
                 margin-bottom: 15px;
-                text-shadow: 1px 1px 2px rgba(255,255,255,0.1);
+                text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
             }
             </style>
             <div class="frame">
@@ -819,7 +819,7 @@ def common():
 
     with col4:
         st.markdown("""
-            <div style="background-color: #000000; border-radius: 10px; padding: 15px; border: 1px solid red;">
+            <div style="background-color: #FFFFFF; border-radius: 10px; padding: 15px; border: 1px solid red;">
                 <h3 style="color: red;">Disclaimer</h3>
                 <p style="color: red;">These charts represent poll data from various sources and time periods. The accuracy and methodology of each poll may vary. Please interpret the results with caution and refer to the original sources for more detailed information.</p>
                 <p style="color: red;">Note: Poll results may not be indicative of final election outcomes.</p>
@@ -1217,7 +1217,7 @@ def past_elections():
         
         with col2:
             st.markdown(f"""
-            <div style="background-color: #000000; border-radius: 15px; padding: 25px; box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1); border: 1px solid #e0e0e0;">
+            <div style="background-color: #FFFFFF; border-radius: 15px; padding: 25px; box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1); border: 1px solid #e0e0e0;">
                 <h3 style="color: #1E88E5; margin-bottom: 20px; font-size: 24px; text-align: center;">Election Results</h3>
                 <div style="margin-bottom: 20px; background-color: #e8f5e9; padding: 15px; border-radius: 10px;">
                     <strong style="color: #4CAF50; font-size: 18px;">Winner:</strong> 

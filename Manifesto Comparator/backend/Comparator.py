@@ -33,7 +33,7 @@ async def generate_comparison(prompt, LLAMA_client):
             ],
             temperature=0.5,
             top_p=0.7,
-            max_tokens=5120
+            max_tokens=10000
         )
         return completion.choices[0].message.content
     except AttributeError:
@@ -76,7 +76,7 @@ async def compare_candidates(candidates, LLAMA_client, candidate_vector_stores,s
             messages=[{"role": "user", "content": full_prompt}],
             temperature=0.3,
             top_p=0.4,
-            max_tokens=4096
+            max_tokens=6144
         )
         return completion.choices[0].message.content
 
