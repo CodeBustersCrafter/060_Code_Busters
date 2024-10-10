@@ -105,7 +105,7 @@
     
 #     fact_check_results = await fact_check_response(aggregated_response,prompt, tavily_client)
     
-#     combine_responses = f"query\n{aggregated_response}\n\n Fact-Check Results:\n{fact_check_results}\n\n"
+#    combine_responses = f"query\n{aggregated_response}\n\n Fact-Check Results:\n{fact_check_results}\n\n"
     
 #     return combine_responses
 
