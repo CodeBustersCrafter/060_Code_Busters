@@ -42,7 +42,7 @@ async def generate_comparison(prompt, LLAMA_client):
         print(f"Error in get_LLAMA_response: {e}")
         return "An error occurred while processing your request. Try again later."
 
-async def compare_candidates(candidates, LLAMA_client, candidate_vector_stores):
+async def compare_candidates(candidates, LLAMA_client, candidate_vector_stores,selected_topics):
     if candidate_vector_stores is None:
         print("Failed to create or retrieve candidate vector stores.")
         return
@@ -51,17 +51,7 @@ async def compare_candidates(candidates, LLAMA_client, candidate_vector_stores):
         if candidate not in candidate_vector_stores:
             return f"No data available for {candidate}."
         
-        sections = [
-            "Economic Policy and Growth Strategies",
-            "Education Reform and Innovation",
-            "Energy and Sustainability",
-            "Healthcare System and Public Health",
-            "National Security and Defense",
-            "Legal Framework and Judicial Reform",
-            "Transportation and Mobility",
-            "Infrastructure Development and Modernization",
-            "Foreign Policy and International Relations"
-        ]
+        sections = selected_topics
         
         async def get_section_context(section):
             return await retrieve_context(f"{section} {prompt}", candidate_vector_stores[candidate], top_k=10)
@@ -91,19 +81,12 @@ async def compare_candidates(candidates, LLAMA_client, candidate_vector_stores):
         return completion.choices[0].message.content
 
     prompt = """Summarize the key policies and approaches in the manifesto for this candidate
-    on the following sections:
-    1. Economic Policy and Growth Strategies
-    2. Education Reform and Innovation
-    3. Energy and Sustainability
-    4. Healthcare System and Public Health
-    5. National Security and Defense
-    6. Legal Framework and Judicial Reform
-    7. Transportation and Mobility
-    8. Infrastructure Development and Modernization
-    9. Foreign Policy and International Relations
-    Provide a brief overview for each policy area, focusing on main points and any unique initiatives."""
+    on the following sections:"""
+    for section in selected_topics:
+        prompt += f"\n{section}"
     
     responses = await asyncio.gather(*[get_candidate_response(candidate, prompt) for candidate in candidates])
+
     responses = dict(zip(candidates, responses))
 
     policies_string = "".join(f"{candidate}'s policies:\n{response}\n\n" for candidate, response in responses.items())
@@ -123,15 +106,7 @@ async def compare_candidates(candidates, LLAMA_client, candidate_vector_stores):
     7. Keep the comparison focused on the most important points from the provided responses.
 
     Comparison should cover these sections:
-    1. Economic Policy and Growth Strategies
-    2. Education Reform and Innovation
-    3. Energy and Sustainability
-    4. Healthcare System and Public Health
-    5. National Security and Defense
-    6. Legal Framework and Judicial Reform
-    7. Transportation and Mobility
-    8. Infrastructure Development and Modernization
-    9. Foreign Policy and International Relations
+    {selected_topics}
     """
     
     comparison = await generate_comparison(comparison_prompt, LLAMA_client)
