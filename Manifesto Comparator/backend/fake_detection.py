@@ -133,15 +133,15 @@ def verify_claim_hiss(claim, gemini_model, tavily_client, SLM):
             })
     
     # Step 3: Provide a final verdict
-    final_prediction = "Based on the verifications, this is - "
+    final_prediction = "Based on the verifications, this is "
     truth_levels = [v['verification'].lower() for v in verifications]
     
     if all('true' in t for t in truth_levels):
-        final_prediction += "true."
+        final_prediction += "True."
     elif all('false' in t for t in truth_levels):
-        final_prediction += "false."
+        final_prediction += "False."
     else:
-        final_prediction += "partially true."
+        final_prediction += "Cannot be determined."
     
     return final_prediction, verifications
 

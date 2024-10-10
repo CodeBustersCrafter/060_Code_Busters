@@ -33,7 +33,7 @@ async def generate_comparison(prompt, LLAMA_client):
             ],
             temperature=0.5,
             top_p=0.7,
-            max_tokens=3072
+            max_tokens=5120
         )
         return completion.choices[0].message.content
     except AttributeError:
@@ -54,7 +54,7 @@ async def compare_candidates(candidates, LLAMA_client, candidate_vector_stores,s
         sections = selected_topics
         
         async def get_section_context(section):
-            return await retrieve_context(f"{section} {prompt}", candidate_vector_stores[candidate], top_k=10)
+            return await retrieve_context(f"{prompt} {section}", candidate_vector_stores[candidate], top_k=10)
         
         section_contexts = await asyncio.gather(*[get_section_context(section) for section in sections])
         context = "\n".join(f"{section}:\n{context}\n" for section, context in zip(sections, section_contexts))

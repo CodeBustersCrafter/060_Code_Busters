@@ -47,13 +47,9 @@ def initialize_clients():
         generation_config=generation_config,
     )    
 
-    openai_client = OpenAI(
-        api_key= os.getenv("OPENAI_API_KEY"),
-        base_url="https://api.aimlapi.com",
-    )
     memory = ConversationBufferMemory(return_messages=True)
     
-    return LLAMA_client, tavily_client, memory, gemini_model, openai_client
+    return LLAMA_client, tavily_client, memory, gemini_model
 
 async def retrieve_context(query, vector_store, top_k=5):
     results = vector_store.similarity_search_with_score(query, k=top_k)
@@ -99,13 +95,14 @@ async def combine_responses(response1, response2, tavily_client,prompt):
     print(is_consistent)
     aggregated_response = aggregate_responses(response1, response2, is_consistent)
     
-    fast_check_results = await fast_check_response(prompt, tavily_client)
+    # fast_check_results = await fast_check_response(prompt, tavily_client)
+    combine_responses = aggregated_response
     
-    combine_responses = f"query\n{aggregated_response}\n\n Fact-Check Results:\n{fast_check_results}\n\n"
+    # combine_responses = f"query\n{aggregated_response}\n\n Fact-Check Results:\n{fast_check_results}\n\n"
     
     return combine_responses
 
-async def generate_response(prompt, LLAMA_client, tavily_client, vector_store, memory, type, gemini_model, openai_client):
+async def generate_response(prompt, LLAMA_client, tavily_client, general_vector_store, instructions_vector_store, parties_vector_store, memory, type, gemini_model):
 
     async def get_LLAMA_response(last_prompt):
         try:
@@ -134,23 +131,7 @@ async def generate_response(prompt, LLAMA_client, tavily_client, vector_store, m
         role: user, content: {last_prompt}"""
         response = chat_session.send_message(final_prompt)
         return response.text
-    
-    # async def get_openai_response(last_prompt):
-    #     response = openai_client.chat.completions.create(
-    #         model="gpt-3.5-turbo",
-    #         messages=[
-    #             {
-    #                 "role": "system",
-    #                 "content": "You are an AI assistant who knows everything.",
-    #             },
-    #             {
-    #                 "role": "user",
-    #                 "content": last_prompt
-    #             },
-    #         ],
-    #     )
-    #     return response.choices[0].message.content
-    
+
     if not is_election_or_politics_related(prompt):
         print("Not election or politics related")
         history = memory.load_memory_variables({})
@@ -160,9 +141,30 @@ async def generate_response(prompt, LLAMA_client, tavily_client, vector_store, m
     
         if type == 1:
             memory.save_context({"input": prompt}, {"output": response})
-        return response
+        Agent = "normal"
+        return response , Agent
+    else:
+        Agent = Agent_selector(prompt)
+        if Agent == "general":
+            context = await retrieve_context(prompt, general_vector_store)  
+        elif Agent == "instructor":
+            context = await retrieve_context(prompt, instructions_vector_store)  
+        elif Agent == "history":
+            context = await retrieve_context(prompt, parties_vector_store)  
+        elif Agent == "graph":
+            context = await retrieve_context(prompt, general_vector_store)  
+            graph_prompt = f"""Generate a JSON object for plotting a graph related to election data based on this prompt: {prompt}
+            Instructions:
+            - The response should be a string that can be directly converted into a JSON object in Python.
+            - Include 'type' (e.g., 'bar', 'line', 'pie','stacked_bar', 'bar_demographic') and 'data' keys in the JSON object.
+            - 'data' should contain the necessary information for plotting (e.g., labels, values).
+            - Do not include any explanatory text outside the JSON structure.
+            - Ensure the JSON is valid and can be parsed without additional processing.
 
-    context = await retrieve_context(prompt, vector_store)    
+            Informations: {context}
+            """
+            graph_response = await get_LLAMA_response(graph_prompt)
+            return graph_response , Agent
 
     if type == 1:
         history = memory.load_memory_variables({})
@@ -220,9 +222,9 @@ async def generate_response(prompt, LLAMA_client, tavily_client, vector_store, m
         
         final_response = await get_gemini_response(final_prompt)
         memory.save_context({"input": prompt}, {"output": final_response})
-        return final_response    
+        return final_response , Agent    
     else:
-        return await get_gemini_response(full_prompt)
+        return await get_gemini_response(full_prompt) , Agent
 
 def is_election_or_politics_related(prompt):
     # Creating SLM client
@@ -257,10 +259,59 @@ def is_election_or_politics_related(prompt):
     print(f"\nSLM_response: {SLM_response.strip()}")
     print(f"Process time: {process_time:.2f} seconds")
 
-    if "yes" in SLM_response.strip().lower():
+    if "yes" in SLM_response.strip().lower() or "election" in prompt.strip().lower():
         return True
     elif "no" in SLM_response.strip().lower():
         return False
     else:
         print(f"Unexpected SLM response: {SLM_response}")
         return False
+
+def Agent_selector(prompt):
+    # Creating SLM client
+    SLM = InferenceClient(
+        "mistralai/Mistral-7B-Instruct-v0.1",
+        token=os.getenv("HuggingFace_API_KEY"),
+    )
+
+    SLM_prompt = f"""
+    Analyze the following prompt and categorize it based on these criteria:
+    1. If it's about election instructions and guidelines, respond with 'instructor'.
+    2. If it's about election history and political parties, respond with 'history'.
+    3. If it's related to elections or politics in Sri Lanka but doesn't fit the above categories, respond with 'general'.
+    4. If it's about drawing a graph or chart related to election data, respond with 'graph'.
+    
+    Prompt: {prompt}
+    """
+        
+    start_time = time.time()
+        
+    SLM_response = ""
+    for message in SLM.chat_completion(
+            messages=[{"role": "user", "content": SLM_prompt}],
+            max_tokens=50,
+            stream=True,
+        ):
+            content = message.choices[0].delta.content
+            if content:
+                print(content, end="")
+                SLM_response += content 
+
+    end_time = time.time()
+    process_time = end_time - start_time
+        
+    print(f"\nSLM_response: {SLM_response.strip()}")
+    print(f"Process time: {process_time:.2f} seconds")
+
+    response = SLM_response.strip().lower()
+    if "instructor" in response:
+        return "instructor"
+    elif "history" in response:
+        return "history"
+    elif "graph" in response:
+        return "graph"
+    elif "general" in response:
+        return "general"
+    else:
+        print(f"Unexpected SLM response: {SLM_response}")
+        return "general"

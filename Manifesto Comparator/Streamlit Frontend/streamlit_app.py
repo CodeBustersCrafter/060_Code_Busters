@@ -12,8 +12,9 @@ load_dotenv()
 
 # Constants for different API endpoints
 MANIFESTO_API_URL = os.getenv("COMPARATOR_URL", "http://127.0.0.1:8000/compare")
+MANIFESTO_CHAT_API_URL = os.getenv("MANIFESTO_CHAT_URL", "http://127.0.0.1:8000/manifestochat")
 WIN_PREDICTOR_API_URL = os.getenv("WIN_PREDICTOR_URL", "http://127.0.0.1:8000/win_predictor")
-CHATBOT_API_URL = os.getenv("FASTAPI_URL", "http://127.0.0.1:8000/generate")
+CHATBOT_API_URL = os.getenv("GENERATE_URL", "http://127.0.0.1:8000/generate")
 FAKE_DETECTION_API_URL = os.getenv("FAKE_DETECTION_URL", "http://127.0.0.1:8000/fake_detection")
 
 def generate_response(prompt, language):
@@ -25,7 +26,33 @@ def generate_response(prompt, language):
         "language": language
     }
     try:
+        start_time = time.time()
         response = requests.post(CHATBOT_API_URL, headers=headers, data=json.dumps(payload))
+        if response.status_code == 200:
+            data = response.json()
+            translated_response = data.get("response", "System is busy please try again later.")
+            agent = data.get("agent", "Error")
+            end_time = time.time()
+            total_time = end_time - start_time
+            print(f"Response generated in {total_time:.2f} seconds")
+            return translated_response, agent
+        else:
+            print(f"Error {response.status_code}: {response.text}")
+            return f"Error {response.status_code}: {response.text}", "Error"
+    except requests.exceptions.RequestException as e:
+        print(f"An error occurred: {e}")
+        return f"An error occurred: {e}", "Error"
+
+def generate_manifesto_response(prompt, language):
+    headers = {
+        "Content-Type": "application/json"
+    }
+    payload = {
+        "prompt": prompt,
+        "language": language
+    }
+    try:
+        response = requests.post(MANIFESTO_CHAT_API_URL, headers=headers, data=json.dumps(payload))
         if response.status_code == 200:
             return response.json().get("response", "No response found.")
         else:
@@ -78,139 +105,225 @@ def election_chatbot():
         help="Select the language you'd like to use for chatting with the Election Bot."
     )
     language = language_options[selected_language]
+    # Add text input for user messages
+    user_input = st.chat_input("Type your message here")
     
     if 'manifesto_messages' not in st.session_state:
         st.session_state['manifesto_messages'] = []
 
-    def send_message():
-        user_input = st.session_state["manifesto_user_input"]
-        if user_input:
-            st.session_state.manifesto_messages.append({"type": "user", "text": user_input, "language": language})
-            with st.spinner("Generating response..."):
-                progress_placeholder = st.empty()
-                progress_bar = progress_placeholder.progress(0)
-                for i in range(100):
-                    time.sleep(0.01)
-                    progress_bar.progress(i + 1)
-                response = generate_manifesto_response(user_input, language)
-                # response = {msg: "Hello", chart: {chart_type:"bar", data: {x: [1,2,3], y: [3,2,1]}}}
-                # response = {msg: "Hello", chart: {chart_type:"line", data: {x: [1,2,3], y: [3,2,1]}}}
-                # response = {msg: "Hello", chart: {chart_type:"pie", data: {x: [1,2,3], y: [3,2,1]}}}
-                # response = {msg: "Hello", chart: {chart_type:"map", data: {x: [1,2,3], y: [3,2,1]}}}
-                # response = {msg: "Hello", chart: {chart_type:"stacked_bar", data: {x: [1,2,3], y: [3,2,1]}}}
-                # response = {msg: "Hello", chart: {chart_type:"bar_demographic", data: {x: [1,2,3], y: [3,2,1]}}}
-                # response = {msg: "Hello", chart: {chart_type:"stacked_bar_demographic", data: {x: [1,2,3], y: [3,2,1]}}}
-                
-                progress_placeholder.empty()
-            st.session_state.manifesto_messages.append({"type": "bot", "text": response.get("msg", ""), "chart": response.get("chart", {}), "language": language})
-            st.session_state["manifesto_user_input"] = ""
-            st.session_state["chatbot"] = []
-
-    st.text_input("Type your message here:", key="manifesto_user_input", on_change=send_message)
-    # Add dummy data for chart testing
-    # if st.button("Test Charts"):
-    #     dummy_charts = [
-    #         {"type": "bot", "text": "Bar Chart Test", "chart": {"chart_type": "bar", "data": {"x": ["A", "B", "C"], "y": [3, 1, 4]}}, "language": language},
-    #         {"type": "bot", "text": "Line Chart Test", "chart": {"chart_type": "line", "data": {"x": [1, 2, 3, 4], "y": [1, 4, 2, 3]}}, "language": language},
-    #         {"type": "bot", "text": "Pie Chart Test", "chart": {"chart_type": "pie", "data": {"x": ["Category 1", "Category 2", "Category 3"], "y": [30, 50, 20]}}, "language": language},
-    #         {"type": "bot", "text": "Map Test", "chart": {"chart_type": "map", "data": {"latitude": [7.8731, 6.9271, 9.6615], "longitude": [80.7718, 79.8612, 80.0255]}}, "language": language},
-    #         {"type": "bot", "text": "Stacked Bar Test", "chart": {"chart_type": "stacked_bar", "data": {"x": ["Group A", "Group B", "Group C"], "y1": [1, 2, 3], "y2": [4, 3, 2], "y3": [2, 1, 3]}}, "language": language},
-    #         {"type": "bot", "text": "Bar Demographic Test", "chart": {"chart_type": "bar_demographic", "data": {"Age Group": ["18-25", "26-35", "36-45", "46+"], "Percentage": [20, 30, 25, 25]}}, "language": language},
-    #         {"type": "bot", "text": "Stacked Bar Demographic Test", "chart": {"chart_type": "stacked_bar_demographic", "data": {"Age Group": ["18-25", "26-35", "36-45", "46+"], "Male": [10, 15, 12, 13], "Female": [10, 15, 13, 12]}}, "language": language},
-    #     ]
-    #     st.session_state.manifesto_messages.extend(dummy_charts)
-    # # Initialize the 'chatbot' key in session state if it doesn't exist
-    # if 'chatbot' not in st.session_state:
-    #     st.session_state['chatbot'] = 'general'  # Set a default value, e.g., 'general'
-
-    # # Create a radio button for selecting the chatbot type
-    # chatbot_type = st.radio(
-    #     "Select Chatbot Type",
-    #     ('General Election Bot', 'Election Instructor', 'History Bot'),
-    #     key='chatbot_selector'
-    # )
-
-    # # Update the 'chatbot' value in session state based on user selection
-    # if chatbot_type == 'General Election Bot':
-    #     st.session_state['chatbot'] = 'general'
-    # elif chatbot_type == 'Election Instructor':
-    #     st.session_state['chatbot'] = 'instructor'
-    # else:
-    #     st.session_state['chatbot'] = 'history'
+    # Display existing messages
     for msg in st.session_state.manifesto_messages:
         if msg["type"] == "user":
-            st.chat_message("user", avatar="👤").markdown(f"{msg['text']} ({selected_language.split()[0]})", help="Your message")
+            st.chat_message("user", avatar="👤").markdown(f"{msg['text']} ({msg['language'].split()[0]})", help="Your message")
         else:
-            if st.session_state["chatbot"] == "history":
-                st.chat_message("assistant", avatar="🤖").markdown(f"***General Election Bot***\n\n{msg['text']} ({selected_language.split()[0]})", help="General Election Bot message")
-                display_chart(msg["chart"])
-            elif st.session_state["chatbot"] == "instructor":
-                st.chat_message("assistant", avatar="📜").markdown(f"***Election Instructor***\n\n{msg['text']} ({selected_language.split()[0]})", help="Election instructor message")
-                display_chart(msg["chart"])
+            agent = msg["agent"]
+            if agent == "general":
+                avatar = "🤖"
+                name = "General Election Bot"
+            elif agent == "history":
+                avatar = "📚"
+                name = "Election History Bot"
+            elif agent == "instructor":
+                avatar = "📜"
+                name = "Election Instructor"
+            elif agent == "graph":
+                avatar = "📊"
+                name = "Graph Generator"
             else:
-                st.chat_message("assistant", avatar="📚").markdown(f"***History Bot***\n\n{msg['text']} ({selected_language.split()[0]})", help="History Bot message")
-                display_chart(msg["chart"])
+                avatar = "🤖"
+                name = "Normal Bot"
+            
+            with st.chat_message("assistant", avatar=avatar):
+                st.markdown(f"***{name}***\n\n{msg['text']} ({msg['language'].split()[0]})", help=f"{name} message")
+                
+                if agent == "graph" and "graph_data" in msg:
+                    try:
+                        graph_data = msg["graph_data"]
+                        if graph_data["type"] in ["bar", "stacked_bar", "bar_demographic"]:
+                            fig = go.Figure(data=[
+                                go.Bar(name=dataset["label"], x=graph_data["data"]["labels"], y=dataset["data"],
+                                       marker_color=dataset["backgroundColor"])
+                                for dataset in graph_data["data"]["datasets"]
+                            ])
+                            fig.update_layout(
+                                title=graph_data["options"]["title"]["text"],
+                                xaxis_title="Categories",
+                                yaxis_title="Values",
+                                barmode='group' if graph_data["type"] == "bar" else 'stack'
+                            )
+                            st.plotly_chart(fig)
+                        elif graph_data["type"] == "line":
+                            fig = go.Figure(data=[
+                                go.Scatter(x=graph_data["data"]["labels"], y=dataset["data"], mode='lines', name=dataset["label"])
+                                for dataset in graph_data["data"]["datasets"]
+                            ])
+                            fig.update_layout(
+                                title=graph_data["options"]["title"]["text"],
+                                xaxis_title="X-axis",
+                                yaxis_title="Y-axis"
+                            )
+                            st.plotly_chart(fig)
+                        elif graph_data["type"] == "pie":
+                            fig = go.Figure(data=[go.Pie(labels=graph_data["data"]["labels"], values=graph_data["data"]["datasets"][0]["data"])])
+                            fig.update_layout(title=graph_data["options"]["title"]["text"])
+                            st.plotly_chart(fig)
+                    except Exception as e:
+                        st.error(f"Error displaying graph: {str(e)}")
 
-def display_chart(chart):
-    if chart:
-        if chart.get("chart_type") == "bar":
-            with st.container():
-                placeholder = st.empty()
-                df = pd.DataFrame(chart["data"])
-                for i in range(len(df)):
-                    placeholder.bar_chart(df.iloc[:i+1])
-                    time.sleep(0.3)
-                placeholder.bar_chart(df)
-        elif chart.get("chart_type") == "line":
-            with st.container():
-                placeholder = st.empty()
-                df = pd.DataFrame(chart["data"])
-                for i in range(len(df)):
-                    placeholder.line_chart(df.iloc[:i+1])
-                    time.sleep(0.3)
-                placeholder.line_chart(df)
-        elif chart.get("chart_type") == "pie":
-            import matplotlib.pyplot as plt
+    if user_input:
+        st.session_state.manifesto_messages.append({"type": "user", "text": user_input, "language": language})
+        st.chat_message("user", avatar="👤").markdown(f"{user_input} ({selected_language.split()[0]})", help="Your message")
 
-            fig, ax = plt.subplots()
-            ax.pie(chart["data"]["y"], labels=chart["data"]["x"], autopct='%1.1f%%')
-            st.pyplot(fig)
-        elif chart.get("chart_type") == "map":
-            with st.container():
-                placeholder = st.empty()
-                df = pd.DataFrame(chart["data"])
-                for i in range(len(df)):
-                    placeholder.map(df.iloc[:i+1])
-                    time.sleep(0.3)
-                placeholder.map(df)
-        elif chart.get("chart_type") == "stacked_bar":
-            with st.container():
-                placeholder = st.empty()
-                df = pd.DataFrame(chart["data"])
-                for i in range(len(df)):
-                    placeholder.bar_chart(df.iloc[:i+1])
-                    time.sleep(0.3)
-                placeholder.bar_chart(df)
-        elif chart.get("chart_type") == "bar_demographic":
-            with st.container():
-                placeholder = st.empty()
-                df = pd.DataFrame(chart["data"])
-                for i in range(len(df)):
-                    placeholder.bar_chart(df.iloc[:i+1])
-                    time.sleep(0.3)
-                placeholder.bar_chart(df)
-        elif chart.get("chart_type") == "stacked_bar_demographic":
-            with st.container():
-                placeholder = st.empty()
-                df = pd.DataFrame(chart["data"])
-                for i in range(len(df)):
-                    placeholder.bar_chart(df.iloc[:i+1])
-                    time.sleep(0.3)
-                placeholder.bar_chart(df)
-        else:
-            st.write("No chart available")
+        with st.chat_message("assistant"):
+            message_placeholder = st.empty()
+            full_response = ""
+            with st.spinner("Generating response..."):
+                response, agent = generate_response(user_input, language)
+                print(response)
+                print(agent)
+            
+            if agent == "general":
+                avatar = "🤖"
+                name = "General Election Bot"
+            elif agent == "history":
+                avatar = "📚"
+                name = "Election History Bot"
+            elif agent == "instructor":
+                avatar = "📜"
+                name = "Election Instructor"
+            elif agent == "graph":
+                avatar = "📊"
+                name = "Graph Generator"
+            else:
+                avatar = "🤖"
+                name = "Normal Bot"
+            
+            if agent != "graph":
+                # Simulate typing effect
+                full_response = f"***{name}***\n\n"
+                message_placeholder.markdown(full_response + "▌")
+                time.sleep(0.5)  # Pause to show the agent name
+                
+                for chunk in response.split('\n'):
+                    for word in chunk.split():
+                        full_response += word + " "
+                        message_placeholder.markdown(full_response + "▌")
+                        time.sleep(0.05)
+                    full_response += "\n\n"
+                    message_placeholder.markdown(full_response + "▌")
+                    time.sleep(0.1)
+                
+                message_placeholder.markdown(full_response)
+                st.session_state.manifesto_messages.append({"type": "assistant", "text": response, "language": language, "agent": agent})
+            else:
+                try:
+                    # Extract JSON string from the response
+                    json_str = response.split("```")[1] if "```" in response else response
+                    graph_data = json.loads(json_str)
+                    if graph_data["type"] in ["bar", "stacked_bar", "bar_demographic"]:
+                        fig = go.Figure(data=[
+                            go.Bar(name=dataset["label"], x=graph_data["data"]["labels"], y=dataset["data"],
+                                   marker_color=dataset["backgroundColor"])
+                            for dataset in graph_data["data"]["datasets"]
+                        ])
+                        fig.update_layout(
+                            title=graph_data["options"]["title"]["text"],
+                            xaxis_title="Categories",
+                            yaxis_title="Values",
+                            barmode='group' if graph_data["type"] == "bar" else 'stack'
+                        )
+                        st.plotly_chart(fig)
+                    elif graph_data["type"] == "line":
+                        fig = go.Figure(data=[
+                            go.Scatter(x=graph_data["data"]["labels"], y=dataset["data"], mode='lines', name=dataset["label"])
+                            for dataset in graph_data["data"]["datasets"]
+                        ])
+                        fig.update_layout(
+                            title=graph_data["options"]["title"]["text"],
+                            xaxis_title="X-axis",
+                            yaxis_title="Y-axis"
+                        )
+                        st.plotly_chart(fig)
+                    elif graph_data["type"] == "pie":
+                        fig = go.Figure(data=[go.Pie(labels=graph_data["data"]["labels"], values=graph_data["data"]["datasets"][0]["data"])])
+                        fig.update_layout(title=graph_data["options"]["title"]["text"])
+                        st.plotly_chart(fig)
+                    else:
+                        st.error("Unsupported graph type")
+                    
+                    st.session_state.manifesto_messages.append({"type": "assistant", "text": "Here's the graph you requested:", "language": language, "agent": agent, "graph_data": graph_data})
+                except json.JSONDecodeError:
+                    st.error("Failed to parse graph data")
+                except KeyError:
+                    st.error("Invalid graph data format")
+                except IndexError:
+                    st.error("Graph data not found in the response")
+
+
+# def display_chart(chart):
+#     if chart:
+#         if chart.get("chart_type") == "bar":
+#             with st.container():
+#                 placeholder = st.empty()
+#                 df = pd.DataFrame(chart["data"])
+#                 for i in range(len(df)):
+#                     placeholder.bar_chart(df.iloc[:i+1])
+#                     time.sleep(0.3)
+#                 placeholder.bar_chart(df)
+#         elif chart.get("chart_type") == "line":
+#             with st.container():
+#                 placeholder = st.empty()
+#                 df = pd.DataFrame(chart["data"])
+#                 for i in range(len(df)):
+#                     placeholder.line_chart(df.iloc[:i+1])
+#                     time.sleep(0.3)
+#                 placeholder.line_chart(df)
+#         elif chart.get("chart_type") == "pie":
+#             import matplotlib.pyplot as plt
+
+#             fig, ax = plt.subplots()
+#             ax.pie(chart["data"]["y"], labels=chart["data"]["x"], autopct='%1.1f%%')
+#             st.pyplot(fig)
+#         elif chart.get("chart_type") == "map":
+#             with st.container():
+#                 placeholder = st.empty()
+#                 df = pd.DataFrame(chart["data"])
+#                 for i in range(len(df)):
+#                     placeholder.map(df.iloc[:i+1])
+#                     time.sleep(0.3)
+#                 placeholder.map(df)
+#         elif chart.get("chart_type") == "stacked_bar":
+#             with st.container():
+#                 placeholder = st.empty()
+#                 df = pd.DataFrame(chart["data"])
+#                 for i in range(len(df)):
+#                     placeholder.bar_chart(df.iloc[:i+1])
+#                     time.sleep(0.3)
+#                 placeholder.bar_chart(df)
+#         elif chart.get("chart_type") == "bar_demographic":
+#             with st.container():
+#                 placeholder = st.empty()
+#                 df = pd.DataFrame(chart["data"])
+#                 for i in range(len(df)):
+#                     placeholder.bar_chart(df.iloc[:i+1])
+#                     time.sleep(0.3)
+#                 placeholder.bar_chart(df)
+#         elif chart.get("chart_type") == "stacked_bar_demographic":
+#             with st.container():
+#                 placeholder = st.empty()
+#                 df = pd.DataFrame(chart["data"])
+#                 for i in range(len(df)):
+#                     placeholder.bar_chart(df.iloc[:i+1])
+#                     time.sleep(0.3)
+#                 placeholder.bar_chart(df)
+#         else:
+#             st.write("No chart available")
 
 def manifesto_chatbot():
+    # Reset messages when entering the page
+    if 'manifesto_chatbot_messages' not in st.session_state:
+        st.session_state['manifesto_chatbot_messages'] = []
+
     # Add language selection with more user-friendly options
     language_options = {
         "English 🇬🇧": "English",
@@ -224,28 +337,25 @@ def manifesto_chatbot():
         help="Select the language you'd like to use for chatting with the Manifesto Bot."
     )
     language = language_options[selected_language]
-    
-    if 'messages' not in st.session_state:
-        st.session_state['messages'] = []
 
     def send_message():
         user_input = st.session_state["user_input"]
         if user_input:
-            st.session_state.messages.append({"type": "user", "text": user_input, "language": language})
+            st.session_state.manifesto_chatbot_messages.append({"type": "user", "text": user_input, "language": language})
             with st.spinner("Generating response..."):
                 progress_placeholder = st.empty()
                 progress_bar = progress_placeholder.progress(0)
                 for i in range(100):
                     time.sleep(0.01)
                     progress_bar.progress(i + 1)
-                response = generate_response(user_input, language)
+                response = generate_manifesto_response(user_input, language)
                 progress_placeholder.empty()
-            st.session_state.messages.append({"type": "bot", "text": response, "language": language})
+            st.session_state.manifesto_chatbot_messages.append({"type": "bot", "text": response, "language": language})
             st.session_state["user_input"] = ""
 
     st.text_input("Type your message here:", key="user_input", on_change=send_message)
 
-    for msg in st.session_state.messages:
+    for msg in st.session_state.manifesto_chatbot_messages:
         if msg["type"] == "user":
             st.chat_message("user").markdown(f"{msg['text']} ({selected_language.split()[0]})", help="Your message")
         else:
@@ -539,24 +649,24 @@ def manifesto_comparator():
         st.markdown("""
             <style>
             .frame {
-                border: 2px solid #1E88E5;
+                border: 2px solid #4CAF50;
                 border-radius: 15px;
                 padding: 25px;
-                box-shadow: 0 6px 12px rgba(0,0,0,0.1);
-                background: linear-gradient(to bottom right, #f0f8ff, #e6f2ff);
+                box-shadow: 0 6px 12px rgba(255,255,255,0.1);
+                background: linear-gradient(to bottom right, #1a1a1a, #2a2a2a);
                 transition: all 0.3s ease;
             }
             .frame:hover {
                 transform: translateY(-5px);
-                box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+                box-shadow: 0 8px 16px rgba(255,255,255,0.2);
             }
             .frame-title {
                 font-size: 24px;
                 font-weight: bold;
-                color: #1E88E5;
+                color: #4CAF50;
                 text-align: center;
                 margin-bottom: 15px;
-                text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+                text-shadow: 1px 1px 2px rgba(255,255,255,0.1);
             }
             </style>
             <div class="frame">
@@ -564,6 +674,7 @@ def manifesto_comparator():
             </div>
         """, unsafe_allow_html=True)
         manifesto_chatbot()
+        
 if 'app_mode' not in st.session_state:
     st.session_state['app_mode'] = "Home"
 
@@ -1128,240 +1239,240 @@ def past_elections():
         st.markdown("<hr style='margin: 40px 0; border: 0; border-top: 2px solid #e0e0e0;'>", unsafe_allow_html=True)
 
 
-def presidential_election(availability):
-    st.header("🗳 Presidential Elections")
-    if availability:
-        getData()
-    else:
-        st.write("Comming Soon...")
-def getData():
-    sheet_id = "1NCLSJbgstmJu2zI-VGB7p-7yKs9X13po2O1XKgIAhz0"
-    import pandas as pd
+# def presidential_election(availability):
+#     st.header("🗳 Presidential Elections")
+#     if availability:
+#         getData()
+#     else:
+#         st.write("Comming Soon...")
+# def getData():
+#     sheet_id = "1NCLSJbgstmJu2zI-VGB7p-7yKs9X13po2O1XKgIAhz0"
+#     import pandas as pd
     
-    # Get the list of all sheet names
-    sheet_list = pd.read_excel(f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=xlsx", sheet_name=None).keys()
+#     # Get the list of all sheet names
+#     sheet_list = pd.read_excel(f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=xlsx", sheet_name=None).keys()
     
-    # Remove the last sheet and put it first
-    sheet_list = list(sheet_list)
-    last_sheet = sheet_list.pop()
-    sheet_list.insert(0, last_sheet)
+#     # Remove the last sheet and put it first
+#     sheet_list = list(sheet_list)
+#     last_sheet = sheet_list.pop()
+#     sheet_list.insert(0, last_sheet)
 
-    # Create tabs for each sheet
-    tabs = st.tabs(sheet_list)
+#     # Create tabs for each sheet
+#     tabs = st.tabs(sheet_list)
     
-    # Create a dictionary to store the loaded data for each sheet
-    sheet_data = {}
+#     # Create a dictionary to store the loaded data for each sheet
+#     sheet_data = {}
 
-    # Loop through each tab and sheet
-    for tab, sheet_name in zip(tabs, sheet_list):
-        with tab:
-            st.subheader(f"Data from sheet: {sheet_name}")
+#     # Loop through each tab and sheet
+#     for tab, sheet_name in zip(tabs, sheet_list):
+#         with tab:
+#             st.subheader(f"Data from sheet: {sheet_name}")
             
-            # Check if the data for this sheet has already been loaded
-            if sheet_name not in sheet_data:
-                # If not, load the data when the tab is clicked
-                if st.button(f"Load data for {sheet_name}"):
-                    with st.spinner(f"Loading data for {sheet_name}..."):
-                        df = pd.read_excel(f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=xlsx", sheet_name=sheet_name)
-                        sheet_data[sheet_name] = df
-                    st.success(f"Data for {sheet_name} loaded successfully!")
+#             # Check if the data for this sheet has already been loaded
+#             if sheet_name not in sheet_data:
+#                 # If not, load the data when the tab is clicked
+#                 if st.button(f"Load data for {sheet_name}"):
+#                     with st.spinner(f"Loading data for {sheet_name}..."):
+#                         df = pd.read_excel(f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=xlsx", sheet_name=sheet_name)
+#                         sheet_data[sheet_name] = df
+#                     st.success(f"Data for {sheet_name} loaded successfully!")
             
-            # If the data is loaded, display it and create visualizations
-            if sheet_name in sheet_data:
-                col1,col2 = st.columns(2,gap='large')
-                with col1:
-                    st.markdown("""
-                        <style>
-                            .stDataFrame {
-                                background-color: #f0f8ff;
-                                border-radius: 10px;
-                                padding: 10px;
-                                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-                            }
-                            .stDataFrame [data-testid="stDataFrameDataCell"] {
-                                font-family: 'Arial', sans-serif;
-                                color: #333;
-                            }
-                            .stDataFrame [data-testid="stDataFrameDataCell"]:nth-child(even) {
-                                background-color: #e6f3ff;
-                            }
-                        </style>
-                    """, unsafe_allow_html=True)
+#             # If the data is loaded, display it and create visualizations
+#             if sheet_name in sheet_data:
+#                 col1,col2 = st.columns(2,gap='large')
+#                 with col1:
+#                     st.markdown("""
+#                         <style>
+#                             .stDataFrame {
+#                                 background-color: #f0f8ff;
+#                                 border-radius: 10px;
+#                                 padding: 10px;
+#                                 box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+#                             }
+#                             .stDataFrame [data-testid="stDataFrameDataCell"] {
+#                                 font-family: 'Arial', sans-serif;
+#                                 color: #333;
+#                             }
+#                             .stDataFrame [data-testid="stDataFrameDataCell"]:nth-child(even) {
+#                                 background-color: #e6f3ff;
+#                             }
+#                         </style>
+#                     """, unsafe_allow_html=True)
                     
-                        # Start of Selection
-                        # Start of Selection
-                    st.markdown("### 📊 Election Data")
+#                         # Start of Selection
+#                         # Start of Selection
+#                     st.markdown("### 📊 Election Data")
                     
-                    column_config = {}
+#                     column_config = {}
                     
-                    # Hide the first column by excluding it from the displayed dataframe
-                    df_display = sheet_data[sheet_name].copy()
-                    first_column = df_display.columns[0]
-                    df_display.drop(columns=[first_column], inplace=True)
+#                     # Hide the first column by excluding it from the displayed dataframe
+#                     df_display = sheet_data[sheet_name].copy()
+#                     first_column = df_display.columns[0]
+#                     df_display.drop(columns=[first_column], inplace=True)
                     
-                    # Freeze the second column by keeping it first in the display
-                    second_column = df_display.columns[0]
-                    column_config[second_column] = st.column_config.Column()
+#                     # Freeze the second column by keeping it first in the display
+#                     second_column = df_display.columns[0]
+#                     column_config[second_column] = st.column_config.Column()
                     
-                    # Configure the remaining columns
-                    for col in df_display.columns[1:]:
-                        if df_display[col].dtype in ['float64', 'int64']:
-                            column_config[col] = st.column_config.NumberColumn(
-                                format="{:.2f}%",
-                                help=f"Percentage for {col}",
-                                min_value=0,
-                                max_value=100,
-                                step=0.01,
-                                color="blue"
-                            )
+#                     # Configure the remaining columns
+#                     for col in df_display.columns[1:]:
+#                         if df_display[col].dtype in ['float64', 'int64']:
+#                             column_config[col] = st.column_config.NumberColumn(
+#                                 format="{:.2f}%",
+#                                 help=f"Percentage for {col}",
+#                                 min_value=0,
+#                                 max_value=100,
+#                                 step=0.01,
+#                                 color="blue"
+#                             )
                     
-                    st.dataframe(
-                        df_display,
-                        use_container_width=True,
-                        hide_index=True,
-                        height=1000,  # Adjust this value as needed to fit all rows
-                        column_config=column_config
-                    )
-                    st.markdown("🔍 Hover over column headers for more information.")
-                with col2:
-                    visualize_data(sheet_data[sheet_name])
-            else:
-                st.info(f"Click the button above to load data for {sheet_name}")
+#                     st.dataframe(
+#                         df_display,
+#                         use_container_width=True,
+#                         hide_index=True,
+#                         height=1000,  # Adjust this value as needed to fit all rows
+#                         column_config=column_config
+#                     )
+#                     st.markdown("🔍 Hover over column headers for more information.")
+#                 with col2:
+#                     visualize_data(sheet_data[sheet_name])
+#             else:
+#                 st.info(f"Click the button above to load data for {sheet_name}")
 
-def visualize_data(df):
-    import plotly.express as px
+# def visualize_data(df):
+#     import plotly.express as px
     
-    # Define color mapping for candidates
-    color_map = {
-        'RW': 'green',
-        'Sajith': 'yellowgreen',
-        'AKD': 'purple',
-        'Namal': 'red',
-        'Dilith': 'blue',
-        'Other': 'white'
-    }
+#     # Define color mapping for candidates
+#     color_map = {
+#         'RW': 'green',
+#         'Sajith': 'yellowgreen',
+#         'AKD': 'purple',
+#         'Namal': 'red',
+#         'Dilith': 'blue',
+#         'Other': 'white'
+#     }
 
-    # Filter out the 'TOTAL' and 'PRECENTAGE' rows
-    df_filtered = df[~df['Electoral Division'].isin(['TOTAL', 'PRECENTAGE'])]
+#     # Filter out the 'TOTAL' and 'PRECENTAGE' rows
+#     df_filtered = df[~df['Electoral Division'].isin(['TOTAL', 'PRECENTAGE'])]
     
-    # Create the map
-    import pydeck as pdk
-    from urllib.error import URLError
+#     # Create the map
+#     import pydeck as pdk
+#     from urllib.error import URLError
 
-    @st.cache_data
-    def load_electoral_district_data():
-        # Updated electoral district data for Sri Lanka
-        districts = [
-            {"name": "Colombo", "latitude": 6.9271, "longitude": 79.8612},
-            {"name": "Gampaha", "latitude": 7.0917, "longitude": 80.0000},
-            {"name": "Kalutara", "latitude": 6.5854, "longitude": 79.9607},
-            {"name": "Kandy", "latitude": 7.2906, "longitude": 80.6337},
-            {"name": "Matale", "latitude": 7.4675, "longitude": 80.6234},
-            {"name": "Nuwara Eliya", "latitude": 6.9497, "longitude": 80.7891},
-            {"name": "Galle", "latitude": 6.0535, "longitude": 80.2210},
-            {"name": "Matara", "latitude": 5.9549, "longitude": 80.5550},
-            {"name": "Hambantota", "latitude": 6.1429, "longitude": 81.1212},
-            {"name": "Jaffna", "latitude": 9.6615, "longitude": 80.0255},
-            {"name": "Vanni", "latitude": 8.7514, "longitude": 80.4997},
-            {"name": "Batticaloa", "latitude": 7.7170, "longitude": 81.7000},
-            {"name": "Digamadulla", "latitude": 7.2853, "longitude": 81.6716},
-            {"name": "Trincomalee", "latitude": 8.5711, "longitude": 81.2335},
-            {"name": "Kurunegala", "latitude": 7.4818, "longitude": 80.3609},
-            {"name": "Puttalam", "latitude": 8.0408, "longitude": 79.8394},
-            {"name": "Anuradhapura", "latitude": 8.3114, "longitude": 80.4037},
-            {"name": "Polonnaruwa", "latitude": 7.9403, "longitude": 81.0188},
-            {"name": "Badulla", "latitude": 6.9934, "longitude": 81.0550},
-            {"name": "Monaragala", "latitude": 6.8872, "longitude": 81.3501},
-            {"name": "Ratnapura", "latitude": 6.7056, "longitude": 80.3847},
-            {"name": "Kegalle", "latitude": 7.2513, "longitude": 80.3464}
-        ]
-        return pd.DataFrame(districts)
+#     @st.cache_data
+#     def load_electoral_district_data():
+#         # Updated electoral district data for Sri Lanka
+#         districts = [
+#             {"name": "Colombo", "latitude": 6.9271, "longitude": 79.8612},
+#             {"name": "Gampaha", "latitude": 7.0917, "longitude": 80.0000},
+#             {"name": "Kalutara", "latitude": 6.5854, "longitude": 79.9607},
+#             {"name": "Kandy", "latitude": 7.2906, "longitude": 80.6337},
+#             {"name": "Matale", "latitude": 7.4675, "longitude": 80.6234},
+#             {"name": "Nuwara Eliya", "latitude": 6.9497, "longitude": 80.7891},
+#             {"name": "Galle", "latitude": 6.0535, "longitude": 80.2210},
+#             {"name": "Matara", "latitude": 5.9549, "longitude": 80.5550},
+#             {"name": "Hambantota", "latitude": 6.1429, "longitude": 81.1212},
+#             {"name": "Jaffna", "latitude": 9.6615, "longitude": 80.0255},
+#             {"name": "Vanni", "latitude": 8.7514, "longitude": 80.4997},
+#             {"name": "Batticaloa", "latitude": 7.7170, "longitude": 81.7000},
+#             {"name": "Digamadulla", "latitude": 7.2853, "longitude": 81.6716},
+#             {"name": "Trincomalee", "latitude": 8.5711, "longitude": 81.2335},
+#             {"name": "Kurunegala", "latitude": 7.4818, "longitude": 80.3609},
+#             {"name": "Puttalam", "latitude": 8.0408, "longitude": 79.8394},
+#             {"name": "Anuradhapura", "latitude": 8.3114, "longitude": 80.4037},
+#             {"name": "Polonnaruwa", "latitude": 7.9403, "longitude": 81.0188},
+#             {"name": "Badulla", "latitude": 6.9934, "longitude": 81.0550},
+#             {"name": "Monaragala", "latitude": 6.8872, "longitude": 81.3501},
+#             {"name": "Ratnapura", "latitude": 6.7056, "longitude": 80.3847},
+#             {"name": "Kegalle", "latitude": 7.2513, "longitude": 80.3464}
+#         ]
+#         return pd.DataFrame(districts)
 
-    try:
-        # Load the electoral district data
-        district_data = load_electoral_district_data()
+#     try:
+#         # Load the electoral district data
+#         district_data = load_electoral_district_data()
 
-        # Merge the district data with the input DataFrame
-        df_filtered.index = df_filtered.index.astype(str)
-        merged_data = pd.merge(district_data, df_filtered, left_on='name', right_on='Electoral Division', how='left')
+#         # Merge the district data with the input DataFrame
+#         df_filtered.index = df_filtered.index.astype(str)
+#         merged_data = pd.merge(district_data, df_filtered, left_on='name', right_on='Electoral Division', how='left')
 
-        # Create layers for each candidate
-        layers = []
-        candidates = ['RW', 'Sajith', 'AKD', 'Namal', 'Dilith']
-        colors = [[0, 0, 255], [0, 255, 0], [255, 0, 0], [255, 165, 0], [128, 0, 128]]
+#         # Create layers for each candidate
+#         layers = []
+#         candidates = ['RW', 'Sajith', 'AKD', 'Namal', 'Dilith']
+#         colors = [[0, 0, 255], [0, 255, 0], [255, 0, 0], [255, 165, 0], [128, 0, 128]]
 
-        for candidate, color in zip(candidates, colors):
-            layer = pdk.Layer(
-                "ColumnLayer",
-                data=merged_data,
-                get_position=["longitude", "latitude"],
-                get_elevation=candidate,
-                elevation_scale=100,
-                radius=10000,
-                get_fill_color=color + [160],
-                pickable=True,
-                auto_highlight=True
-            )
-            layers.append(layer)
+#         for candidate, color in zip(candidates, colors):
+#             layer = pdk.Layer(
+#                 "ColumnLayer",
+#                 data=merged_data,
+#                 get_position=["longitude", "latitude"],
+#                 get_elevation=candidate,
+#                 elevation_scale=100,
+#                 radius=10000,
+#                 get_fill_color=color + [160],
+#                 pickable=True,
+#                 auto_highlight=True
+#             )
+#             layers.append(layer)
 
-        # Create a TextLayer for district names
-        text_layer = pdk.Layer(
-            "TextLayer",
-            data=merged_data,
-            get_position=["longitude", "latitude"],
-            get_text="name",
-            get_size=16,
-            get_color=[0, 0, 0, 255],
-            get_angle=0,
-            get_text_anchor="middle",
-            get_alignment_baseline="center"
-        )
-        layers.append(text_layer)
+#         # Create a TextLayer for district names
+#         text_layer = pdk.Layer(
+#             "TextLayer",
+#             data=merged_data,
+#             get_position=["longitude", "latitude"],
+#             get_text="name",
+#             get_size=16,
+#             get_color=[0, 0, 0, 255],
+#             get_angle=0,
+#             get_text_anchor="middle",
+#             get_alignment_baseline="center"
+#         )
+#         layers.append(text_layer)
 
-        # Render the map with the 3D columns and district names
-        st.pydeck_chart(
-            pdk.Deck(
-                map_style="mapbox://styles/mapbox/light-v9",
-                initial_view_state={
-                    "latitude": 7.8731,
-                    "longitude": 80.7718,
-                    "zoom": 7,
-                    "pitch": 50
-                },
-                layers=layers,
-                tooltip={
-                    "html": "<b>{name}</b><br/>RW: {RW}<br/>Sajith: {Sajith}<br/>AKD: {AKD}<br/>Namal: {Namal}<br/>Dilith: {Dilith}",
-                    "style": {"backgroundColor": "steelblue", "color": "white"}
-                }
-            )
-        )
+#         # Render the map with the 3D columns and district names
+#         st.pydeck_chart(
+#             pdk.Deck(
+#                 map_style="mapbox://styles/mapbox/light-v9",
+#                 initial_view_state={
+#                     "latitude": 7.8731,
+#                     "longitude": 80.7718,
+#                     "zoom": 7,
+#                     "pitch": 50
+#                 },
+#                 layers=layers,
+#                 tooltip={
+#                     "html": "<b>{name}</b><br/>RW: {RW}<br/>Sajith: {Sajith}<br/>AKD: {AKD}<br/>Namal: {Namal}<br/>Dilith: {Dilith}",
+#                     "style": {"backgroundColor": "steelblue", "color": "white"}
+#                 }
+#             )
+#         )
 
-    except URLError as e:
-        st.error(f"Data load error: {e}")
-    except Exception as e:
-        st.error(f"An error occurred: {e}")
+#     except URLError as e:
+#         st.error(f"Data load error: {e}")
+#     except Exception as e:
+#         st.error(f"An error occurred: {e}")
     
-    # Create the stacked bar chart
-    df_melt = df_filtered.melt(id_vars=['Electoral Division'], 
-                               value_vars=['RW', 'Sajith', 'AKD', 'Namal', 'Dilith', 'Other'],
-                               var_name='Candidate', value_name='Votes')
+#     # Create the stacked bar chart
+#     df_melt = df_filtered.melt(id_vars=['Electoral Division'], 
+#                                value_vars=['RW', 'Sajith', 'AKD', 'Namal', 'Dilith', 'Other'],
+#                                var_name='Candidate', value_name='Votes')
     
-    fig_bar = px.bar(df_melt, x='Electoral Division', y='Votes', color='Candidate',
-                     title='Votes by Candidate and Division',
-                     color_discrete_map=color_map)
+#     fig_bar = px.bar(df_melt, x='Electoral Division', y='Votes', color='Candidate',
+#                      title='Votes by Candidate and Division',
+#                      color_discrete_map=color_map)
     
-    st.plotly_chart(fig_bar)
+#     st.plotly_chart(fig_bar)
     
-    # Create the leaderboard
-    leaderboard = df.loc[df['Electoral Division'] == 'TOTAL', ['RW', 'Sajith', 'AKD', 'Namal', 'Dilith', 'Other']].T
-    if not leaderboard.empty:
-        leaderboard = leaderboard.sort_values(by=leaderboard.columns[0], ascending=False)
-        leaderboard.columns = ['Total Votes']
+#     # Create the leaderboard
+#     leaderboard = df.loc[df['Electoral Division'] == 'TOTAL', ['RW', 'Sajith', 'AKD', 'Namal', 'Dilith', 'Other']].T
+#     if not leaderboard.empty:
+#         leaderboard = leaderboard.sort_values(by=leaderboard.columns[0], ascending=False)
+#         leaderboard.columns = ['Total Votes']
         
-        st.subheader("Leaderboard")
-        st.table(leaderboard.style.background_gradient(cmap='YlOrRd'))
-    else:
-        st.warning("No data available for the leaderboard.")
+#         st.subheader("Leaderboard")
+#         st.table(leaderboard.style.background_gradient(cmap='YlOrRd'))
+#     else:
+#         st.warning("No data available for the leaderboard.")
 
 def fake_detection():
     st.header("🕵️ Fake News Detection")
@@ -1398,12 +1509,12 @@ def fake_detection():
 def main():
     st.set_page_config(page_title="Sri Lankan Election Insights", layout="wide")
     
-    today = datetime.datetime.now()
-    election_date = datetime.datetime(2024, 9, 21, 8, 0, 0)
-    time_until_election = election_date - today
-    days_until_election = time_until_election.days
-    hours_until_election = time_until_election.seconds // 3600
-    minutes_until_election = (time_until_election.seconds % 3600) // 60
+    # today = datetime.datetime.now()
+    # election_date = datetime.datetime(2024, 9, 21, 8, 0, 0)
+    # time_until_election = election_date - today
+    # days_until_election = time_until_election.days
+    # hours_until_election = time_until_election.seconds // 3600
+    # minutes_until_election = (time_until_election.seconds % 3600) // 60
     
     # Create a more professional looking sidebar
     with st.sidebar:
@@ -1421,70 +1532,82 @@ def main():
             set_app_mode("Fake News Detection")
         if st.button("🗳 Past Elections", use_container_width=True):
             set_app_mode("Past Elections")
-        if st.button("🗳 Presidential Elections", use_container_width=True):
-            set_app_mode("Presidential Elections")
+        # if st.button("🗳 Presidential Elections", use_container_width=True):
+        #     set_app_mode("Presidential Elections")
         st.markdown("---")
         st.info("Select a feature from above to get started.")
 
     col1, col2 = st.columns([3, 1])
     with col1:
         st.title("🗳 Sri Lankan Election Insights")
-    with col2:
-        st.markdown(f"""
-        <style>
-        @keyframes pulse {{
-            0% {{ transform: scale(1); }}
-            50% {{ transform: scale(1.05); }}
-            100% {{ transform: scale(1); }}
-        }}
-        .countdown-container {{
-            background-color: #000000;
-            color: white;
-            padding: 15px;
-            border-radius: 10px;
-            text-align: center;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-            animation: pulse 2s infinite;
-            border: 2px solid #1E88E5;
-        }}
-        .countdown-title {{
-            font-size: 18px;
-            font-weight: bold;
-            margin-bottom: 10px;
-        }}
-        .countdown-number {{
-            font-size: 28px;
-            font-weight: bold;
-            margin: 5px 0;
-        }}
-        .countdown-label {{
-            font-size: 14px;
-            text-transform: uppercase;
-        }}
-        .countdown-unit {{
-            display: inline-block;
-            margin: 0 10px;
-        }}
-        </style>
-        <div class='countdown-container'>
-            <div class='countdown-title'>Election Countdown</div>
-            <div class='countdown-unit'>
-                <div class='countdown-number'>{days_until_election}</div>
-                <div class='countdown-label'>Days</div>
-            </div>
-            <div class='countdown-unit'>
-                <div class='countdown-number'>{hours_until_election:02d}</div>
-                <div class='countdown-label'>Hours</div>
-            </div>
-            <div class='countdown-unit'>
-                <div class='countdown-number'>{minutes_until_election:02d}</div>
-                <div class='countdown-label'>Minutes</div>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-
+    # with col2:
+    #     st.markdown(f"""
+    #     <style>
+    #     @keyframes pulse {{
+    #         0% {{ transform: scale(1); }}
+    #         50% {{ transform: scale(1.05); }}
+    #         100% {{ transform: scale(1); }}
+    #     }}
+    #     .countdown-container {{
+    #         background-color: #000000;
+    #         color: white;
+    #         padding: 15px;
+    #         border-radius: 10px;
+    #         text-align: center;
+    #         box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    #         animation: pulse 2s infinite;
+    #         border: 2px solid #1E88E5;
+    #     }}
+    #     .countdown-title {{
+    #         font-size: 18px;
+    #         font-weight: bold;
+    #         margin-bottom: 10px;
+    #     }}
+    #     .countdown-number {{
+    #         font-size: 28px;
+    #         font-weight: bold;
+    #         margin: 5px 0;
+    #     }}
+    #     .countdown-label {{
+    #         font-size: 14px;
+    #         text-transform: uppercase;
+    #     }}
+    #     .countdown-unit {{
+    #         display: inline-block;
+    #         margin: 0 10px;
+    #     }}
+    #     </style>
+    #     <div class='countdown-container'>
+    #         <div class='countdown-title'>Election Countdown</div>
+    #         <div class='countdown-unit'>
+    #             <div class='countdown-number'>{days_until_election}</div>
+    #             <div class='countdown-label'>Days</div>
+    #         </div>
+    #         <div class='countdown-unit'>
+    #             <div class='countdown-number'>{hours_until_election:02d}</div>
+    #             <div class='countdown-label'>Hours</div>
+    #         </div>
+    #         <div class='countdown-unit'>
+    #             <div class='countdown-number'>{minutes_until_election:02d}</div>
+    #             <div class='countdown-label'>Minutes</div>
+    #         </div>
+    #     </div>
+    #     """, unsafe_allow_html=True)
     if st.session_state["app_mode"] == "Home":
         home()
+        # Add a footer only for the home page
+        st.markdown("---")
+        st.markdown("""
+        <div style='background-color: transparent; padding: 10px; border-radius: 5px; margin-bottom: 20px; border: 1px solid #1E88E5;'>
+            <p style='font-style: italic; color: #1E88E5;'>Empowering voters with data-driven insights and impartial information, powered by advanced AI.<br>Explore our comprehensive tools to stay informed about the upcoming Sri Lankan Presidential Election.</p>
+        </div>
+        """, unsafe_allow_html=True)
+        st.markdown("""
+            <div style='text-align: center; color: #666;'>
+                <p>© 2023 Sri Lankan Election Insights. All rights reserved.</p>
+                <p>Developed with ❤ for a better informed electorate.</p>
+            </div>
+        """, unsafe_allow_html=True)
     elif st.session_state["app_mode"] == "Manifesto Comparator":
         manifesto_comparator()
     elif st.session_state["app_mode"] == "Win Predictor":
@@ -1495,25 +1618,10 @@ def main():
         fake_detection()
     elif st.session_state["app_mode"] == "Past Elections":
         past_elections()
-    elif st.session_state["app_mode"] == "Presidential Elections":
-        presidential_election(True)
+    # elif st.session_state["app_mode"] == "Presidential Elections":
+    #     presidential_election(True)
     else:
         home()
-
-
-    # Add a footer
-    st.markdown("---")
-    st.markdown("""
-    <div style='background-color: transparent; padding: 10px; border-radius: 5px; margin-bottom: 20px; border: 1px solid #1E88E5;'>
-        <p style='font-style: italic; color: #1E88E5;'>Empowering voters with data-driven insights and impartial information, powered by advanced AI.<br>Explore our comprehensive tools to stay informed about the upcoming Sri Lankan Presidential Election.</p>
-    </div>
-    """, unsafe_allow_html=True)
-    st.markdown("""
-        <div style='text-align: center; color: #666;'>
-            <p>© 2023 Sri Lankan Election Insights. All rights reserved.</p>
-            <p>Developed with ❤ for a better informed electorate.</p>
-        </div>
-    """, unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()

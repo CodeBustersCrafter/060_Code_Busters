@@ -14,7 +14,7 @@ def create_vector_db():
         return FAISS.load_local(vector_db_path, embeddings, allow_dangerous_deserialization=True)
     
     try:
-        file_path = os.path.join(script_dir,"Recources", "text_file_db.txt")
+        file_path = os.path.join(script_dir,"Resources", "text_file_db.txt")
         
         with open(file_path, "r", encoding="utf-8") as file:
             text = file.read()
@@ -61,7 +61,7 @@ def create_candidate_vector_stores():
             return FAISS.load_local(vector_db_path, embeddings, allow_dangerous_deserialization=True)
         
         try:
-            file_path = os.path.join(script_dir,"Recources", file_name)
+            file_path = os.path.join(script_dir,"Resources", file_name)
             with open(file_path, "r", encoding="utf-8") as file:
                 text = file.read()
             print(f"{candidate} manifest file read successfully")
@@ -102,7 +102,7 @@ def create_election_instructions_vector_store():
         return FAISS.load_local(vector_db_path, embeddings, allow_dangerous_deserialization=True)
     
     try:
-        file_path = os.path.join(script_dir, "Recources", "Election Instructions.txt")
+        file_path = os.path.join(script_dir, "Resources", "Election Instructions.txt")
         with open(file_path, "r", encoding="utf-8") as file:
             text = file.read()
         print("Election instructions file read successfully")
@@ -135,7 +135,7 @@ def create_political_parties_vector_store():
         return FAISS.load_local(vector_db_path, embeddings, allow_dangerous_deserialization=True)
     
     try:
-        file_path = os.path.join(script_dir, "Recources", "Sri lankan political parties.txt")
+        file_path = os.path.join(script_dir, "Resources", "Sri lankan political parties.txt")
         with open(file_path, "r", encoding="utf-8") as file:
             text = file.read()
         print("Political parties file read successfully")
