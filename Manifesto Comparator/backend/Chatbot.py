@@ -187,6 +187,12 @@ async def generate_response(prompt, LLAMA_client, tavily_client, general_vector_
                     }}
                 }}
             }}
+            remember when giving a line graph the labels should be in order from left to right.(If they are dates it should be in ascending order)
+            example:
+            {{
+                "type": "line",
+                "data": {{
+                    "labels": ["March 2023", "April 2023", "May 2023", "June 2023", "July 2023", "August 2023", "September 2023", "October 2023", "November 2023", "December 2023", "January 2024", "February 2024", "March 2024", "April 2024", "May 2024", "June 2024", "July 2024", "August 2024"],
             """
             graph_response = await get_LLAMA_response(graph_prompt)
             return graph_response , Agent
@@ -284,7 +290,7 @@ def is_election_or_politics_related(prompt):
     print(f"\nSLM_response: {SLM_response.strip()}")
     print(f"Process time: {process_time:.2f} seconds")
 
-    if "yes" in SLM_response.strip().lower() or "election" in prompt.strip().lower():
+    if "yes" in SLM_response.strip().lower() or "election" in prompt.strip().lower() or "graph" in prompt.strip().lower() or "chart" in prompt.strip().lower() or "plot" in prompt.strip().lower():
         return True
     elif "no" in SLM_response.strip().lower():
         return False
@@ -301,10 +307,10 @@ def Agent_selector(prompt):
 
     SLM_prompt = f"""
     Analyze the following prompt and categorize it based on these criteria:
-    1. If it's about election instructions and guidelines, respond with 'instructor'.
-    2. If it's about election history and political parties, respond with 'history'.
-    3. If it's related to elections or politics in Sri Lanka but doesn't fit the above categories, respond with 'general'.
-    4. If it's about drawing a graph or chart related to election data, respond with 'graph'.
+    1. If it's about drawing a graph or chart related to election data, respond with 'graph'.
+    2. If it's about election instructions and guidelines, respond with 'instructor'.
+    3. If it's about election history and political parties, respond with 'history'.
+    4. If it's related to elections or politics in Sri Lanka but doesn't fit the above categories, respond with 'general'.
     
     Prompt: {prompt}
     """
@@ -329,12 +335,12 @@ def Agent_selector(prompt):
     print(f"Process time: {process_time:.2f} seconds")
 
     response = SLM_response.strip().lower()
-    if "instructor" in response:
-        return "instructor"
+    if "graph" in response or "chart" in prompt.strip().lower() or "plot" in prompt.strip().lower():
+        return "graph"
     elif "history" in response:
         return "history"
-    elif "graph" in response:
-        return "graph"
+    elif "instructor" in response:
+        return "instructor"
     elif "general" in response:
         return "general"
     else:
