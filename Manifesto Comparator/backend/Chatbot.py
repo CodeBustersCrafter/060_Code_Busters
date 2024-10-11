@@ -123,7 +123,27 @@ async def generate_response(prompt, LLAMA_client, tavily_client, general_vector_
         except Exception as e:
             print(f"Error in get_LLAMA_response: {e}")
             return "An error occurred while processing your request. Try again later."
-        
+
+    async def get_graph_LLAMA_response(last_prompt):
+        try:
+            completion = await LLAMA_client.chat.completions.create(
+                model="meta/llama-3.1-70b-instruct",
+                messages=[
+                    {"role": "system", "content": "You are a helpful assistant that generates JSON objects for plotting graphs."},
+                    {"role": "user", "content": last_prompt}
+                ],
+                temperature=0.5,
+                top_p=0.7,
+                max_tokens=4096
+            )
+            return completion.choices[0].message.content
+        except AttributeError:
+            # Handle the case where the response is a string instead of an object
+            return completion
+        except Exception as e:
+            print(f"Error in get_LLAMA_response: {e}")
+            return "An error occurred while processing your request. Try again later."
+                
     async def get_gemini_response(last_prompt):
         chat_session = gemini_model.start_chat()
         final_prompt = f""" 
@@ -152,16 +172,19 @@ async def generate_response(prompt, LLAMA_client, tavily_client, general_vector_
         elif Agent == "history":
             context = await retrieve_context(prompt, parties_vector_store)  
         elif Agent == "graph":
-            context = await retrieve_context(prompt, general_vector_store)  
+            context = await retrieve_context(prompt, general_vector_store,15)
+            print(context)
             graph_prompt = f"""Generate a JSON object for plotting a graph related to election data based on this prompt: {prompt}
             Instructions:
             - The response should be a string that can be directly converted into a JSON object in Python.
+            - Ensure the accuracy of the information used to plot the graph.(specially the year of the data)
             - Include 'type' (e.g., 'bar', 'line', 'pie', 'stacked_bar', 'bar_demographic') and 'data' keys in the JSON object.
             - 'data' should contain the necessary information for plotting (e.g., labels, values).
             - Do not include any explanatory text outside the JSON structure.
             - Ensure the JSON is valid and can be parsed without additional processing.
 
             Informations: {context}
+            Consider only the information related to the prompt: {prompt}
 
             JSON Structure:
             {{
@@ -194,7 +217,7 @@ async def generate_response(prompt, LLAMA_client, tavily_client, general_vector_
                 "data": {{
                     "labels": ["March 2023", "April 2023", "May 2023", "June 2023", "July 2023", "August 2023", "September 2023", "October 2023", "November 2023", "December 2023", "January 2024", "February 2024", "March 2024", "April 2024", "May 2024", "June 2024", "July 2024", "August 2024"],
             """
-            graph_response = await get_LLAMA_response(graph_prompt)
+            graph_response = await get_graph_LLAMA_response(graph_prompt)
             return graph_response , Agent
 
     if type == 1:
