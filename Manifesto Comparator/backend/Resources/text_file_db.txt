@@ -288,3 +288,50 @@ In 2019, Gotabaya Rajapaksa (SLPP) won with 6,924,255 votes (52.25%). The runner
 In the 2024 election, Anura Kumara Dissanayake (NPP) won with 5,634,915 votes (42.30%). Sajith Premadasa (SJB) was the runner-up with 4,363,035 votes (32.75%). The total votes were 13,319,616, with a turnout of 79.46%.
 
 
+2024 distrct wise results :
+
+In Ampara District, Dissanayake received 108,971 votes (25.74%), Premadasa received 200,384 votes (47.33%), Wickremesinghe received 86,589 votes (20.45%), and other candidates received 27,453 votes (4.22%), with 423,397 total valid votes, 6,563 rejected votes, and 429,960 total votes polled out of 555,432 registered electors, making the voter turnout 77.41%.
+
+In Anuradhapura District, Dissanayake received 285,944 votes (47.37%), Premadasa received 202,289 votes (33.51%), Wickremesinghe received 82,152 votes (13.61%), and other candidates received 33,301 votes (3.17%), with 603,686 total valid votes, 9,782 rejected votes, and 613,468 total votes polled out of 741,862 registered electors, making the voter turnout 82.69%.
+
+In Badulla District, Dissanayake received 197,283 votes (34.68%), Premadasa received 219,674 votes (38.61%), Wickremesinghe received 115,138 votes (20.34%), and other candidates received 36,829 votes (3.13%), with 568,924 total valid votes, 15,519 rejected votes, and 584,443 total votes polled out of 705,772 registered electors, making the voter turnout 82.81%.
+
+In Batticaloa District, Dissanayake received 38,832 votes (12.19%), Premadasa received 139,110 votes (43.66%), Wickremesinghe received 91,132 votes (28.60%), and other candidates received 49,574 votes (12.63%), with 318,648 total valid votes, 8,876 rejected votes, and 327,524 total votes polled out of 449,686 registered electors, making the voter turnout 72.83%.
+
+In Colombo District, Dissanayake received 629,963 votes (47.21%), Premadasa received 342,108 votes (25.64%), Wickremesinghe received 281,436 votes (21.09%), and other candidates received 80,883 votes (4.31%), with 1,334,390 total valid votes, 31,796 rejected votes, and 1,366,186 total votes polled out of 1,765,351 registered electors, making the voter turnout 77.39%.
+
+In Galle District, Dissanayake received 366,721 votes (51.45%), Premadasa received 189,555 votes (26.59%), Wickremesinghe received 107,336 votes (15.06%), and other candidates received 49,208 votes (6.90%), with 712,820 total valid votes, 12,541 rejected votes, and 725,361 total votes polled out of 903,163 registered electors, making the voter turnout 80.31%.
+
+In Gampaha District, Dissanayake received 809,410 votes (55.50%), Premadasa received 349,550 votes (23.97%), Wickremesinghe received 216,028 votes (14.81%), and other candidates received 83,401 votes (4.05%), with 1,458,389 total valid votes, 29,381 rejected votes, and 1,487,770 total votes polled out of 1,881,129 registered electors, making the voter turnout 79.09%.
+
+In Hambantota District, Dissanayake received 221,913 votes (51.96%), Premadasa received 131,503 votes (30.79%), Wickremesinghe received 33,217 votes (7.78%), and other candidates received 40,429 votes (9.47%), with 427,062 total valid votes, 6,443 rejected votes, and 433,505 total votes polled out of 520,940 registered electors, making the voter turnout 83.22%.
+
+In Jaffna District, Dissanayake received 27,086 votes (7.29%), Premadasa received 121,177 votes (32.60%), Wickremesinghe received 84,558 votes (22.75%), and other candidates received 138,867 votes (37.36%), with 371,688 total valid votes, 25,353 rejected votes, and 397,041 total votes polled out of 593,187 registered electors, making the voter turnout 66.93%.
+
+In Kalutara District, Dissanayake received 387,764 votes (47.43%), Premadasa received 236,307 votes (28.91%), Wickremesinghe received 143,285 votes (17.53%), and other candidates received 50,162 votes (4.10%), with 817,518 total valid votes, 16,243 rejected votes, and 833,761 total votes polled out of 1,024,244 registered electors, making the voter turnout 81.40%.
+
+In Kandy District, Dissanayake received 394,534 votes (42.26%), Premadasa received 323,998 votes (34.71%), Wickremesinghe received 162,707 votes (17.43%), and other candidates received 52,277 votes (3.13%), with 933,516 total valid votes, 24,153 rejected votes, and 957,669 total votes polled out of 1,191,399 registered electors, making the voter turnout 80.38%.
+
+In Kegalle District, Dissanayake received 247,179 votes (43.39%), Premadasa received 185,930 votes (32.64%), Wickremesinghe received 106,510 votes (18.70%), and other candidates received 30,060 votes (2.94%), with 569,679 total valid votes, 11,878 rejected votes, and 581,557 total votes polled out of 709,622 registered electors, making the voter turnout 81.95%.
+
+In Kurunegala District, Dissanayake received 544,763 votes (48.20%), Premadasa received 368,290 votes (32.58%), Wickremesinghe received 146,520 votes (12.96%), and other candidates received 70,720 votes (4.17%), with 1,130,293 total valid votes, 19,337 rejected votes, and 1,149,630 total votes polled out of 1,417,226 registered electors, making the voter turnout 81.12%.
+
+In Matale District, Dissanayake received 140,544 votes (41.37%), Premadasa received 121,803 votes (35.85%), Wickremesinghe received 53,829 votes (15.84%), and other candidates received 23,558 votes (3.96%), with 339,734 total valid votes, 7,921 rejected votes, and 347,655 total votes polled out of 429,991 registered electors, making the voter turnout 80.85%.
+
+In Matara District, Dissanayake received 312,085 votes (54.18%), Premadasa received 152,481 votes (26.46%), Wickremesinghe received 78,360 votes (13.59%), and other candidates received 32,507 votes (5.40%), with 575,433 total valid votes, 8,598 rejected votes, and 584,031 total votes polled out of 682,419 registered electors, making the voter turnout 85.59%.
+
+In Monaragala District, Dissanayake received 176,872 votes (48.54%), Premadasa received 127,283 votes (34.95%), Wickremesinghe received 39,815 votes (10.91%), and other candidates received 19,459 votes (3.12%), with 363,429 total valid votes, 7,279 rejected votes, and 370,708 total votes polled out of 464,712 registered electors, making the voter turnout 79.77%.
+
+In Mullaitivu District, Dissanayake received 13,444 votes (6.18%), Premadasa received 58,998 votes (32.11%), Wickremesinghe received 34,198 votes (17.90%), and other candidates received 75,706 votes (43.09%), with 182,346 total valid votes, 5,398 rejected votes, and 187,744 total votes polled out of 246,461 registered electors, making the voter turnout 76.16%.
+
+In Nuwara Eliya District, Dissanayake received 120,216 votes (27.51%), Premadasa received 151,667 votes (35.99%), Wickremesinghe received 98,461 votes (21.85%), and other candidates received 39,725 votes (7.79%), with 410,069 total valid votes, 12,307 rejected votes, and 422,376 total votes polled out of 609,865 registered electors, making the voter turnout 69.25%.
+
+In Polonnaruwa District, Dissanayake received 125,359 votes (47.16%), Premadasa received 105,902 votes (38.45%), Wickremesinghe received 23,469 votes (8.86%), and other candidates received 13,249 votes (2.14%), with 268,227 total valid votes, 4,303 rejected votes, and 272,530 total votes polled out of 353,479 registered electors, making the voter turnout 77.10%.
+
+In Puttalam District, Dissanayake received 210,472 votes (46.31%), Premadasa received 159,884 votes (32.42%), Wickremesinghe received 63,336 votes (15.48%), and other candidates received 24,017 votes (3.32%), with 457,709 total valid votes, 10,101 rejected votes, and 467,810 total votes polled out of 614,196 registered electors, making the voter turnout 76.10%.
+
+In Ratnapura District, Dissanayake received 354,711 votes (48.11%), Premadasa received 244,872 votes (31.99%), Wickremesinghe received 119,328 votes (14.96%), and other candidates received 38,513 votes (3.22%), with 757,424 total valid votes, 13,517 rejected votes, and 770,941 total votes polled out of 949,987 registered electors, making the voter turnout 81.15%.
+
+In Trincomalee District, Dissanayake received 52,633 votes (16.89%), Premadasa received 152,540 votes (48.22%), Wickremesinghe received 91,109 votes (28.71%), and other candidates received 23,510 votes (3.22%), with 319,792 total valid votes, 6,847 rejected votes, and 326,639 total votes polled out of 451,842 registered electors, making the voter turnout 72.30%.
+
+In Vavuniya District, Dissanayake received 24,328 votes (9.24%), Premadasa received 85,233 votes (32.12%), Wickremesinghe received 64,339 votes (24.73%), and other candidates received 94,710 votes (35.01%), with 268,610 total valid votes, 11,341 rejected votes, and 279,951 total votes polled out of 394,502 registered electors, making the voter turnout 70.97%.
