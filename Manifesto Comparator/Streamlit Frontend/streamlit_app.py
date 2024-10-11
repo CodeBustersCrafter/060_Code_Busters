@@ -105,8 +105,6 @@ def election_chatbot():
         help="Select the language you'd like to use for chatting with the Election Bot."
     )
     language = language_options[selected_language]
-    # Add text input for user messages
-    user_input = st.chat_input("Type your message here")
     
     if 'manifesto_messages' not in st.session_state:
         st.session_state['manifesto_messages'] = []
@@ -170,6 +168,10 @@ def election_chatbot():
                     except Exception as e:
                         st.error(f"Error displaying graph: {str(e)}")
 
+
+    user_input = st.chat_input("Type your message here")
+
+
     if user_input:
         st.session_state.manifesto_messages.append({"type": "user", "text": user_input, "language": language})
         st.chat_message("user", avatar="👤").markdown(f"{user_input} ({selected_language.split()[0]})", help="Your message")
@@ -179,8 +181,6 @@ def election_chatbot():
             full_response = ""
             with st.spinner("Generating response..."):
                 response, agent = generate_response(user_input, language)
-                print(response)
-                print(agent)
             
             if agent == "general":
                 avatar = "🤖"

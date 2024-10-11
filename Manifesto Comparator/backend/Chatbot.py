@@ -51,7 +51,7 @@ def initialize_clients():
     
     return LLAMA_client, tavily_client, memory, gemini_model
 
-async def retrieve_context(query, vector_store, top_k=5):
+async def retrieve_context(query, vector_store, top_k=10):
     results = vector_store.similarity_search_with_score(query, k=top_k)
     weighted_context = ""
     for doc, score in results:
@@ -156,12 +156,37 @@ async def generate_response(prompt, LLAMA_client, tavily_client, general_vector_
             graph_prompt = f"""Generate a JSON object for plotting a graph related to election data based on this prompt: {prompt}
             Instructions:
             - The response should be a string that can be directly converted into a JSON object in Python.
-            - Include 'type' (e.g., 'bar', 'line', 'pie','stacked_bar', 'bar_demographic') and 'data' keys in the JSON object.
+            - Include 'type' (e.g., 'bar', 'line', 'pie', 'stacked_bar', 'bar_demographic') and 'data' keys in the JSON object.
             - 'data' should contain the necessary information for plotting (e.g., labels, values).
             - Do not include any explanatory text outside the JSON structure.
             - Ensure the JSON is valid and can be parsed without additional processing.
 
             Informations: {context}
+
+            JSON Structure:
+            {{
+                "type": "chart_type",
+                "data": {{
+                    "labels": ["label1", "label2", ...],
+                    "datasets": [
+                        {{
+                            "label": "Dataset 1",
+                            "data": [value1, value2, ...],
+                            "backgroundColor": "color1"
+                        }},
+                        {{
+                            "label": "Dataset 2",
+                            "data": [value1, value2, ...],
+                            "backgroundColor": "color2"
+                        }}
+                    ]
+                }},
+                "options": {{
+                    "title": {{
+                        "text": "Chart Title"
+                    }}
+                }}
+            }}
             """
             graph_response = await get_LLAMA_response(graph_prompt)
             return graph_response , Agent
