@@ -6,7 +6,6 @@ from dotenv import load_dotenv
 import pandas as pd
 import time
 import plotly.graph_objects as go
-import datetime
 # Load environment variables from .env file
 load_dotenv()
 
@@ -170,7 +169,6 @@ def election_chatbot():
 
 
     user_input = st.chat_input("Type your message here")
-
 
     if user_input:
         st.session_state.manifesto_messages.append({"type": "user", "text": user_input, "language": language})
