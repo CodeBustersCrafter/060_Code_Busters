@@ -1,102 +1,97 @@
-# Safe-Sri-Lanka
+# Sri Lankan Election Insights
 
-Safe-Sri-Lanka is a mobile application designed to enhance safety and security for residents and visitors in Sri Lanka. The app features an SOS button for emergency situations, real-time location tracking, and access to helplines.
+Sri Lankan Election Insights is a comprehensive application that leverages FastAPI for the backend and Streamlit for the frontend to provide AI-generated responses and analysis related to the Sri Lankan Elections 2024. Using advanced technologies like LangChain, FAISS, and LLM models, this project offers an interactive interface for users to query election manifestos, compare candidates, and get predictions on election outcomes.
 
-The project is deployed and accessible at: [Safe-Sri-Lanka](https://your-deployed-url.com)
+The project is deployed and accessible at: https://bit.ly/SL_Election
 
 ## 📚 Table of Contents
 
 1. [Features](#features)
-2. [Prerequisites](#prerequisites)
-3. [Project Structure](#project-structure)
-4. [Getting Started](#getting-started)
-5. [Running the Application](#running-the-application)
-6. [Usage](#usage)
-7. [Troubleshooting](#troubleshooting)
-8. [Contributing](#contributing)
-9. [License](#license)
+2. [Prerequisites](%EF%B8%8F-prerequisites)
+3. [Project Structure](#-project-structure)
+4. [Getting Started](#-getting-started)
+5. [Running the Application](#%EF%B8%8F-running-the-application)
+6. [Usage](#%EF%B8%8F-usage)
+7. [Troubleshooting](#-troubleshooting)
+8. [Contributing](#-contributing)
+9. [License](#-license)
 
-## 🛠 Features
+## 🛠Features
 
-- **SOS Button:** Instantly send your location and alert emergency contacts.
-- **Real-Time Location Tracking:** Monitor your whereabouts in real-time.
-- **Helpline Access:** Direct access to various emergency and support helplines.
-- **Fake Call:** Simulate incoming calls to manage personal situations discreetly.
-- **Customizable Settings:** Tailor the app according to your preferences.
+- **AI-Powered Responses:** Generate insightful answers based on Sri Lankan election data.
+- **Candidate Comparison:** Compare policies and manifestos of multiple candidates.
+- **Win Predictor:** Analyze polling data and provide election outcome predictions.
+- **Multi-language Support:** Responses available in English, Sinhala, and Tamil.
+- **Interactive Frontend:** User-friendly interface built with Streamlit.
+- **Robust Backend:** FastAPI server handling requests efficiently.
 
 ## ⚙️ Prerequisites
 
-- Node.js (version 14.x or higher)
-- npm (Node package manager)
+- Python 3.8 or higher
+- pip (Python package manager)
 - Git
-- Expo Go app on your mobile device
 
 ## 🗂 Project Structure
 
-- **app/**: Contains the React Native frontend components.
-- **components/**: Houses reusable components used in the application.
-- **hooks/**: Custom hooks for various functionalities.
-- **assets/**: Stores fonts and other static assets.
-- **package.json**: Lists all the dependencies for the project.
+- **Manifesto Comparator/**: Contains the FastAPI backend and data files.
+- **Streamlit Frontend/**: Houses the Streamlit application for the user interface.
+- **requirements.txt**: Lists all the dependencies for the project.
 
 ## 🚀 Getting Started
 
 1. Clone the repository:
-   ```bash
-   git clone https://github.com/your-username/Safe-Sri-Lanka.git
-   cd Safe-Sri-Lanka
    ```
-   
+   git clone https://github.com/CodeBustersCrafter/060_Code_Busters.git
+   cd 060_Code_Busters
+   ```
+
 2. Install dependencies:
-   ```bash
-   npm install
+   ```
+   pip install -r requirements.txt
    ```
 
-3. Install Expo packages using npx:
-
-   ```bash
-   npx expo install expo-camera expo-media-library expo-router
+3. Set up environment variables:
+   Create a `.env` file in the project root with the following content:
    ```
-   
+   OPENAI_API_KEY=your_openai_api_key_here
+   TAVILY_API_KEY=your_tavily_api_key_here
+   GEMINI_API_KEY=your_gemini_api_key_here
+   AZURE_TRANSLATE_ENDPOINT=your_azure_translate_endpoint
+   AZURE_TRANSLATE_KEY=your_azure_translate_key
+   ```
+
 ## ▶️ Running the Application
-Start the Expo development server:
 
-   ```bash
-npx expo start
+1. Start the FastAPI backend:
+   ```
+   python "Manifesto Comparator/backend/app.py"
    ```
 
-Launch the app on your device or emulator:
-
-   On Android Emulator/Device: Press a in the terminal.
-   On iOS Simulator (macOS only): Press i in the terminal.
-   Using Expo Go App: Open the Expo Go app and scan the QR code displayed in the terminal.
+2. In a new terminal, launch the Streamlit frontend:
+   ```
+   cd "Manifesto Comparator\Streamlit Frontend"
+   streamlit run streamlit_app.py
+   ```
 
 ## 🖥️ Usage
-   Access the app via the Expo Go app or emulator.
-   Use the interface to:
-   Send SOS alerts
-   Access helplines
-   Simulate fake calls
-   Track your location
-   
+
+1. Access the Streamlit app at `http://localhost:8501` or visit the deployed version at https://bit.ly/SL_Election.
+2. Use the interface to:
+   - Ask questions about the Sri Lankan Elections 2024
+   - Compare candidate manifestos
+   - View win predictions and polling analysis
+
 ## 🐛 Troubleshooting
-   If you encounter any issues:
-   
-   Ensure all dependencies are correctly installed.
-   Verify that your environment is set up correctly for the Expo app.
-   Check if the required ports (19000 for Expo) are available.
-   
+
+If you encounter any issues:
+- Ensure all dependencies are correctly installed.
+- Verify that your `.env` file contains the correct API keys.
+- Check if the required ports (8000 for FastAPI, 8501 for Streamlit) are available.
+
 ## 🤝 Contributing
-   Contributions are welcome! Please fork the repository and create a pull request with your features or fixes.
+
+Contributions are welcome! Please fork the repository and create a pull request with your features or fixes.
 
 ## 📄 License
-   This project is licensed under the MIT License.
 
-
-
-
-
-
-
-
-
+This project is licensed under the MIT License.
